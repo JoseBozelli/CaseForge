@@ -1,0 +1,16 @@
+# Environment and caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Secrets
+.secrets
+
+# Runtime artifacts (databases, snapshots, run outputs)
+data/
+runs/
+*.db
+*.sqlite
+*.sqlite3
