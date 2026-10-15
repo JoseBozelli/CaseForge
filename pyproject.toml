@@ -18,7 +18,7 @@ packages = ["src/caseforge"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q --strict-markers"
+addopts = "-q --strict-markers --import-mode=importlib"
 markers = ["live: requires a paid model API and network access"]
 
 [tool.ruff]

@@ -1,0 +1,47 @@
+# Canonical operational case vocabulary consumed by the CaseForge core.
+# Source systems are mapped onto these types by versioned mapping files.
+vocabulary_id: caseforge-canonical
+version: 1
+description: Generic operational case events used by the CaseForge core after normalization.
+actors: [requester, operator, system]
+entity_types: [case, task, document]
+event_types:
+  case.created:
+    description: A case was opened.
+    entity_types: [case]
+    allowed_actors: [requester, operator, system]
+    required_attributes: [category]
+  task.requested:
+    description: Work on a task was requested from an owner.
+    entity_types: [task]
+    allowed_actors: [operator, system]
+    required_attributes: [owner_id, due_at]
+  task.completed:
+    description: A task owner reported the task as done.
+    entity_types: [task]
+    allowed_actors: [operator]
+  task.delayed:
+    description: A task passed its due time without completion.
+    entity_types: [task]
+    allowed_actors: [system]
+    required_attributes: [due_at]
+  document.requested:
+    description: A document was requested for a case.
+    entity_types: [document]
+    allowed_actors: [operator, system]
+    required_attributes: [document_type]
+  document.received:
+    description: A requested document arrived.
+    entity_types: [document]
+    allowed_actors: [requester, operator]
+    required_attributes: [document_type]
+  policy.exception:
+    description: A case was flagged as needing a deviation from a documented policy.
+    entity_types: [case]
+    allowed_actors: [operator, system]
+    required_attributes: [policy_ref]
+  case.reopened:
+    description: A previously resolved case was reopened.
+    entity_types: [case]
+    allowed_actors: [requester, operator]
+    required_attributes: [reason]
