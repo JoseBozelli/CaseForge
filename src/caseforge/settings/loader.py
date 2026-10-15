@@ -16,6 +16,7 @@ from caseforge.common.errors import ConfigError
 from caseforge.common.yaml_io import load_yaml_mapping, parse_yaml_value
 from caseforge.events.mapping import MappingSpec, load_mapping
 from caseforge.events.vocabulary import CanonicalVocabulary, load_vocabulary
+from caseforge.knowledge.corpus import Corpus, load_corpus
 from caseforge.settings.models import Settings
 from caseforge.simulation.spec import ScenarioFamily, load_families
 
@@ -35,6 +36,7 @@ class LoadedSettings:
     mapping_paths: tuple[Path, ...]
     families: tuple[ScenarioFamily, ...]
     family_paths: tuple[Path, ...]
+    corpus: Corpus
 
     @property
     def config_files(self) -> tuple[Path, ...]:
@@ -43,6 +45,7 @@ class LoadedSettings:
             self.vocabulary_path,
             *self.mapping_paths,
             *self.family_paths,
+            *self.corpus.paths,
         )
 
 
@@ -115,4 +118,5 @@ def load_settings(path: str | Path, environ: Mapping[str, str] | None = None) ->
         mapping_paths=mapping_paths,
         families=families,
         family_paths=family_paths,
+        corpus=load_corpus((base / settings.knowledge.corpus_dir).resolve()),
     )

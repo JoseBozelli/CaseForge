@@ -16,8 +16,11 @@ def test_container_exposes_configured_tools(config_copy) -> None:
 
 def test_policy_for_unknown_tool_fails_at_startup(config_copy) -> None:
     text = config_copy.read_text(encoding="utf-8")
+    assert "\ntools:\n" in text
     config_copy.write_text(
-        text.rstrip("\n") + "\n  delete_everything: {allowed_agents: [evidence]}\n",
+        text.replace(
+            "\ntools:\n", "\ntools:\n  delete_everything: {allowed_agents: [evidence]}\n", 1
+        ),
         encoding="utf-8",
     )
     with pytest.raises(ConfigError, match="unknown tools"):

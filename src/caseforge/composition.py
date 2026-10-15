@@ -14,7 +14,7 @@ from caseforge.adapters.simulation import SimulatedEnvironment
 from caseforge.common.hashing import sha256_hex
 from caseforge.engine.graph import EngineDeps, build_case_graph
 from caseforge.events.mapping import EventNormalizer
-from caseforge.knowledge.empty import EmptyKnowledgeProvider
+from caseforge.knowledge.bm25 import Bm25KnowledgeProvider
 from caseforge.memory.empty import EmptyEpisodeProvider
 from caseforge.persistence.ports import RecordConflictError
 from caseforge.persistence.sqlite import SqliteRecordStore
@@ -43,8 +43,14 @@ class Container:
         self._clock = clock
         self.store = SqliteRecordStore(base / settings.storage.records_path)
         try:
+            knowledge = Bm25KnowledgeProvider(
+                loaded.corpus.chunks,
+                k1=settings.knowledge.k1,
+                b=settings.knowledge.b,
+                min_score=settings.knowledge.min_score,
+            )
             self.tools = ToolRegistry(
-                read_tools(self.store, EmptyKnowledgeProvider(), EmptyEpisodeProvider()),
+                read_tools(self.store, knowledge, EmptyEpisodeProvider()),
                 settings.tools,
                 clock=clock,
             )

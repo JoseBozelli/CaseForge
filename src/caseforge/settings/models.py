@@ -47,6 +47,13 @@ class SimulationSettings(_Section):
     investigate_after_minutes: int = Field(ge=0)
 
 
+class KnowledgeSettings(_Section):
+    corpus_dir: RelativePath
+    k1: float = Field(default=1.5, gt=0)
+    b: float = Field(default=0.75, ge=0, le=1)
+    min_score: float = Field(default=1.0, ge=0)
+
+
 class Settings(_Section):
     """Root settings document. Secrets never belong here."""
 
@@ -58,3 +65,4 @@ class Settings(_Section):
     simulation: SimulationSettings
     triage: TriagePolicy
     tools: dict[Name, ToolPolicy] = Field(default_factory=dict)
+    knowledge: KnowledgeSettings

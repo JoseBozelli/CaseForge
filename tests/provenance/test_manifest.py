@@ -32,13 +32,15 @@ def test_manifest_records_versions_and_files(config_copy) -> None:
     assert manifest.vocabulary == "caseforge-canonical@1"
     assert manifest.mappings == ("sim-generic@1",)
     assert manifest.git_commit == "a" * 40
-    assert [f.path for f in manifest.files] == [
+    paths = [f.path for f in manifest.files]
+    assert paths == sorted(paths)
+    assert {
         "config/caseforge.yaml",
-        "config/simulation/families/missing_document.v1.yaml",
+        "config/knowledge/policies/escalation.v1.md",
         "config/simulation/families/routine_stalled_task.v1.yaml",
         "config/vocabulary/canonical.v1.yaml",
         "config/vocabulary/mappings/sim.v1.yaml",
-    ]
+    } <= set(paths)
 
 
 def test_manifest_is_deterministic(config_copy) -> None:

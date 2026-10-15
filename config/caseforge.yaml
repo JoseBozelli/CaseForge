@@ -34,3 +34,9 @@ tools:
   get_timeline: {allowed_agents: [evidence], max_results: 50}
   search_policies: {allowed_agents: [policy], max_results: 5}
   search_prior_episodes: {allowed_agents: [evidence], max_results: 5}
+knowledge:
+  corpus_dir: knowledge/policies
+  k1: 1.5
+  b: 0.75
+  min_score: 1.0
+  
