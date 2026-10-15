@@ -1,0 +1,16 @@
+# Fictitious second source used to test vocabulary extensibility.
+mapping_id: alt-test
+mapping_version: 1
+canonical_version: 1
+source_system: alt
+actor_map:
+  AUTOMATION: system
+  AGENT: operator
+rules:
+  - match: {source_type: WorkItemOverdue}
+    canonical_type: task.delayed
+    entity_type: task
+    attribute_map: {deadline: due_at}
+  - match: {source_type: WorkItemClosed}
+    canonical_type: task.completed
+    entity_type: task

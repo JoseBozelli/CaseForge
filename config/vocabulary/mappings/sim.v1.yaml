@@ -1,0 +1,46 @@
+# Mapping from the built-in simulator's source vocabulary to canonical vocabulary v1.
+mapping_id: sim-generic
+mapping_version: 1
+canonical_version: 1
+source_system: sim
+actor_map:
+  req: requester
+  ops: operator
+  sys: system
+rules:
+  - match: {source_type: case.open}
+    canonical_type: case.created
+    entity_type: case
+    attribute_map: {cat: category}
+  - match: {source_type: tsk.req}
+    canonical_type: task.requested
+    entity_type: task
+    attribute_map: {owner: owner_id, due: due_at}
+  - match: {source_type: tsk.done}
+    canonical_type: task.completed
+    entity_type: task
+  - match: {source_type: tsk.late}
+    canonical_type: task.delayed
+    entity_type: task
+    attribute_map: {due: due_at}
+  - match: {source_type: doc.req}
+    canonical_type: document.requested
+    entity_type: document
+    attribute_map: {kind: document_type}
+  - match: {source_type: doc.in, where: {channel: upload}}
+    canonical_type: document.received
+    entity_type: document
+    attribute_map: {kind: document_type}
+  - match: {source_type: pol.flag}
+    canonical_type: policy.exception
+    entity_type: case
+    attribute_map: {policy: policy_ref}
+  - match: {source_type: case.reopen}
+    canonical_type: case.reopened
+    entity_type: case
+    attribute_map: {why: reason}
+reject:
+  - match: {source_type: doc.in, where: {channel: unknown}}
+    reason: document channel cannot be attributed to an actor
+  - match: {source_type: sim.tick}
+    reason: simulator clock event, not an operational event

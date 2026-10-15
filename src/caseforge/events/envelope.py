@@ -6,19 +6,25 @@ from datetime import UTC, datetime
 from typing import Annotated, Final, Literal
 
 from pydantic import (
+    AfterValidator,
     AwareDatetime,
     BaseModel,
     ConfigDict,
     Field,
     JsonValue,
-    field_validator,
     model_validator,
 )
 
 ENVELOPE_SCHEMA_VERSION: Final = "event.v1"
 
+
+def _to_utc(value: datetime) -> datetime:
+    return value.astimezone(UTC)
+
+
 NonEmptyStr = Annotated[str, Field(min_length=1)]
 Sha256Hex = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+UtcDatetime = Annotated[AwareDatetime, AfterValidator(_to_utc)]
 
 
 class EventProvenance(BaseModel):
@@ -56,15 +62,10 @@ class EventEnvelope(BaseModel):
     actor_id: NonEmptyStr | None = None
     correlation_id: NonEmptyStr
     causation_id: NonEmptyStr | None = None
-    occurred_at: AwareDatetime
-    recorded_at: AwareDatetime
+    occurred_at: UtcDatetime
+    recorded_at: UtcDatetime
     attributes: dict[str, JsonValue] = Field(default_factory=dict)
     provenance: EventProvenance
-
-    @field_validator("occurred_at", "recorded_at")
-    @classmethod
-    def _to_utc(cls, value: datetime) -> datetime:
-        return value.astimezone(UTC)
 
     @model_validator(mode="after")
     def _check_consistency(self) -> EventEnvelope:

@@ -10,9 +10,13 @@ from typing import Any
 import pytest
 
 from caseforge.events.envelope import EventEnvelope
+from caseforge.events.source import SourceEvent
+from caseforge.events.vocabulary import CanonicalVocabulary, load_vocabulary
 
 ROOT = Path(__file__).resolve().parents[1]
 CANONICAL_VOCABULARY_PATH = ROOT / "config" / "vocabulary" / "canonical.v1.yaml"
+SIM_MAPPING_PATH = ROOT / "config" / "vocabulary" / "mappings" / "sim.v1.yaml"
+FIXTURES_DIR = ROOT / "tests" / "fixtures"
 
 
 def _base_event_fields() -> dict[str, Any]:
@@ -40,9 +44,39 @@ def _base_event_fields() -> dict[str, Any]:
     }
 
 
+def _base_source_fields() -> dict[str, Any]:
+    return {
+        "source_system": "sim",
+        "source_event_id": "raw-0001",
+        "source_type": "tsk.late",
+        "tenant_id": "tenant-a",
+        "entity_id": "task-0001",
+        "case_id": "case-0001",
+        "actor": "sys",
+        "occurred_at": datetime(2026, 1, 5, 9, 0, tzinfo=UTC),
+        "recorded_at": datetime(2026, 1, 5, 9, 1, tzinfo=UTC),
+        "attributes": {"due": "2026-01-04T17:00:00Z", "internal_note": "not mapped"},
+    }
+
+
 @pytest.fixture
 def canonical_vocabulary_path() -> Path:
     return CANONICAL_VOCABULARY_PATH
+
+
+@pytest.fixture
+def canonical_vocabulary() -> CanonicalVocabulary:
+    return load_vocabulary(CANONICAL_VOCABULARY_PATH)
+
+
+@pytest.fixture
+def sim_mapping_path() -> Path:
+    return SIM_MAPPING_PATH
+
+
+@pytest.fixture
+def fixtures_dir() -> Path:
+    return FIXTURES_DIR
 
 
 @pytest.fixture
@@ -56,5 +90,15 @@ def make_event() -> Callable[..., EventEnvelope]:
         fields = _base_event_fields()
         fields.update(overrides)
         return EventEnvelope.model_validate(fields)
+
+    return _make
+
+
+@pytest.fixture
+def make_source_event() -> Callable[..., SourceEvent]:
+    def _make(**overrides: Any) -> SourceEvent:
+        fields = _base_source_fields()
+        fields.update(overrides)
+        return SourceEvent.model_validate(fields)
 
     return _make
