@@ -14,12 +14,16 @@ from caseforge.adapters.simulation import SimulatedEnvironment
 from caseforge.common.hashing import sha256_hex
 from caseforge.engine.graph import EngineDeps, build_case_graph
 from caseforge.events.mapping import EventNormalizer
+from caseforge.knowledge.empty import EmptyKnowledgeProvider
+from caseforge.memory.empty import EmptyEpisodeProvider
 from caseforge.persistence.ports import RecordConflictError
 from caseforge.persistence.sqlite import SqliteRecordStore
 from caseforge.provenance.manifest import build_run_manifest
 from caseforge.settings.loader import LoadedSettings, load_settings
 from caseforge.simulation.provider import TemplateSimulationProvider
 from caseforge.simulation.world import SimulatedWorld
+from caseforge.tools.builtin import read_tools
+from caseforge.tools.registry import ToolRegistry
 
 Clock = Callable[[], datetime]
 
@@ -39,6 +43,11 @@ class Container:
         self._clock = clock
         self.store = SqliteRecordStore(base / settings.storage.records_path)
         try:
+            self.tools = ToolRegistry(
+                read_tools(self.store, EmptyKnowledgeProvider(), EmptyEpisodeProvider()),
+                settings.tools,
+                clock=clock,
+            )
             checkpoints = (base / settings.storage.checkpoints_path).resolve()
             checkpoints.parent.mkdir(parents=True, exist_ok=True)
             self._checkpoint_conn = sqlite3.connect(checkpoints, check_same_thread=False)

@@ -29,3 +29,8 @@ triage:
       when_all: [document.requested]
       unless_any: [document.received]
       action: send_reminder
+tools:
+  get_case: {allowed_agents: [supervisor, evidence]}
+  get_timeline: {allowed_agents: [evidence], max_results: 50}
+  search_policies: {allowed_agents: [policy], max_results: 5}
+  search_prior_episodes: {allowed_agents: [evidence], max_results: 5}

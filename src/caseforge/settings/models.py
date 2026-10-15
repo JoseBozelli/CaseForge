@@ -12,7 +12,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from caseforge.engine.triage import TriagePolicy
 from caseforge.events.envelope import UtcDatetime
-from caseforge.events.vocabulary import Identifier
+from caseforge.events.vocabulary import Identifier, Name
+from caseforge.tools.models import ToolPolicy
 
 RelativePath = Annotated[str, Field(min_length=1, pattern=r"^[^/\\:][^\\:]*$")]
 
@@ -56,3 +57,4 @@ class Settings(_Section):
     storage: StorageSettings
     simulation: SimulationSettings
     triage: TriagePolicy
+    tools: dict[Name, ToolPolicy] = Field(default_factory=dict)
