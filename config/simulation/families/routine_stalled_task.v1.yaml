@@ -1,0 +1,57 @@
+# S1: a requested task passed its due time; the case otherwise looks routine.
+family_id: routine-stalled-task
+spec_version: 1
+case_prefix: rst
+description: A requested task passed its due time while the rest of the case looks routine.
+source_system: sim
+recording_delay_minutes: [0, 5]
+blockers:
+  reminder_needed:
+    description: The owner overlooked the task and responds to a reminder.
+    weight: 0.75
+    effective_actions: [send_reminder]
+  owner_overloaded:
+    description: The owner is overloaded; the work must move to another owner.
+    weight: 0.25
+    effective_actions: [reassign_task]
+variables:
+  owner: {choice: [owner_a, owner_b, owner_c]}
+templates:
+  - id: open
+    source_type: case.open
+    actor: req
+    offset_minutes: [0, 0]
+    attributes: {cat: {choice: [access_request, equipment, scheduling]}}
+  - id: task_main_request
+    source_type: tsk.req
+    actor: ops
+    entity: t1
+    offset_minutes: [10, 60]
+    attributes: {owner: {var: owner}, due: {at_minutes: 1440}}
+  - id: task_side_request
+    source_type: tsk.req
+    actor: ops
+    entity: t2
+    offset_minutes: [10, 60]
+    attributes: {owner: {var: owner}, due: {at_minutes: 1440}}
+  - id: task_main_late
+    source_type: tsk.late
+    actor: sys
+    entity: t1
+    offset_minutes: [1440, 1500]
+    attributes: {due: {at_minutes: 1440}}
+  - id: task_side_done
+    source_type: tsk.done
+    actor: ops
+    entity: t2
+    when_blocker: [reminder_needed]
+    probability: 0.9
+    offset_minutes: [120, 1380]
+  - id: task_side_late
+    source_type: tsk.late
+    actor: sys
+    entity: t2
+    when_blocker: [owner_overloaded]
+    probability: 0.8
+    offset_minutes: [1440, 1500]
+    attributes: {due: {at_minutes: 1440}}

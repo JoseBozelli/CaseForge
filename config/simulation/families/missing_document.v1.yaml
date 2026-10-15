@@ -1,0 +1,36 @@
+# S2: a requested document has not arrived, or the wrong document arrived.
+family_id: missing-document
+spec_version: 1
+case_prefix: mdoc
+description: A requested document has not arrived, or a document of the wrong type arrived.
+source_system: sim
+recording_delay_minutes: [0, 10]
+blockers:
+  request_overlooked:
+    description: The requester has not acted on the document request.
+    weight: 0.6
+    effective_actions: [send_reminder]
+  wrong_document:
+    description: The requester submitted a document of the wrong type.
+    weight: 0.4
+    effective_actions: [request_document]
+templates:
+  - id: open
+    source_type: case.open
+    actor: req
+    offset_minutes: [0, 0]
+    attributes: {cat: {choice: [account_change, service_activation, records_update]}}
+  - id: doc_request
+    source_type: doc.req
+    actor: ops
+    entity: d1
+    offset_minutes: [15, 120]
+    attributes: {kind: signed_form}
+  - id: wrong_doc
+    source_type: doc.in
+    actor: req
+    entity: d2
+    when_blocker: [wrong_document]
+    probability: 0.85
+    offset_minutes: [600, 2880]
+    attributes: {kind: {choice: [draft_form, unrelated_attachment]}, channel: upload}
