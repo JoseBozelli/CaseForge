@@ -17,13 +17,14 @@ from caseforge.common.yaml_io import load_yaml_mapping, parse_yaml_value
 from caseforge.events.mapping import MappingSpec, load_mapping
 from caseforge.events.vocabulary import CanonicalVocabulary, load_vocabulary
 from caseforge.settings.models import Settings
+from caseforge.simulation.spec import ScenarioFamily, load_families
 
 ENV_PREFIX: Final = "CASEFORGE__"
 
 
 @dataclass(frozen=True)
 class LoadedSettings:
-    """Validated settings plus the vocabulary and mappings they reference."""
+    """Validated settings plus the vocabulary, mappings and families they reference."""
 
     settings: Settings
     settings_path: Path
@@ -32,10 +33,17 @@ class LoadedSettings:
     vocabulary_path: Path
     mappings: tuple[MappingSpec, ...]
     mapping_paths: tuple[Path, ...]
+    families: tuple[ScenarioFamily, ...]
+    family_paths: tuple[Path, ...]
 
     @property
     def config_files(self) -> tuple[Path, ...]:
-        return (self.settings_path, self.vocabulary_path, *self.mapping_paths)
+        return (
+            self.settings_path,
+            self.vocabulary_path,
+            *self.mapping_paths,
+            *self.family_paths,
+        )
 
 
 def apply_env_overrides(
@@ -66,7 +74,7 @@ def apply_env_overrides(
 
 
 def load_settings(path: str | Path, environ: Mapping[str, str] | None = None) -> LoadedSettings:
-    """Load settings, apply overrides, then load and cross-check vocabulary and mappings."""
+    """Load settings, apply overrides, then load and cross-check everything they reference."""
     settings_path = Path(path).resolve()
     raw = load_yaml_mapping(settings_path)
     data, overrides = apply_env_overrides(raw, os.environ if environ is None else environ)
@@ -89,6 +97,14 @@ def load_settings(path: str | Path, environ: Mapping[str, str] | None = None) ->
     if duplicates:
         raise ConfigError(f"multiple mappings for source_system {duplicates}")
 
+    unknown = sorted(settings.triage.referenced_event_types() - vocabulary.event_types.keys())
+    if unknown:
+        raise ConfigError(f"triage rules reference unknown event types {unknown}")
+
+    families_dir = (base / settings.simulation.families_dir).resolve()
+    families = load_families(families_dir)
+    family_paths = tuple(sorted(families_dir.glob("*.yaml")))
+
     return LoadedSettings(
         settings=settings,
         settings_path=settings_path,
@@ -97,4 +113,6 @@ def load_settings(path: str | Path, environ: Mapping[str, str] | None = None) ->
         vocabulary_path=vocabulary_path,
         mappings=mappings,
         mapping_paths=mapping_paths,
+        families=families,
+        family_paths=family_paths,
     )

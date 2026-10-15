@@ -11,3 +11,21 @@ vocabulary:
     - vocabulary/mappings/sim.v1.yaml
 provenance:
   snapshot_mode: redacted   # full | redacted | off
+storage:
+  records_path: ../data/records.db
+  checkpoints_path: ../data/checkpoints.db
+simulation:
+  families_dir: simulation/families
+  start_at: "2026-01-05T09:00:00Z"
+  investigate_after_minutes: 1560
+triage:
+  default_action: escalate_case
+  rules:
+    - id: stalled-task-reminder
+      when_all: [task.delayed]
+      unless_any: [policy.exception]
+      action: send_reminder
+    - id: outstanding-document-reminder
+      when_all: [document.requested]
+      unless_any: [document.received]
+      action: send_reminder

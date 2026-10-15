@@ -34,6 +34,8 @@ def test_manifest_records_versions_and_files(config_copy) -> None:
     assert manifest.git_commit == "a" * 40
     assert [f.path for f in manifest.files] == [
         "config/caseforge.yaml",
+        "config/simulation/families/missing_document.v1.yaml",
+        "config/simulation/families/routine_stalled_task.v1.yaml",
         "config/vocabulary/canonical.v1.yaml",
         "config/vocabulary/mappings/sim.v1.yaml",
     ]
