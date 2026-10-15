@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -17,6 +18,8 @@ ROOT = Path(__file__).resolve().parents[1]
 CANONICAL_VOCABULARY_PATH = ROOT / "config" / "vocabulary" / "canonical.v1.yaml"
 SIM_MAPPING_PATH = ROOT / "config" / "vocabulary" / "mappings" / "sim.v1.yaml"
 FIXTURES_DIR = ROOT / "tests" / "fixtures"
+CONFIG_DIR = ROOT / "config"
+SHIPPED_SETTINGS_PATH = CONFIG_DIR / "caseforge.yaml"
 
 
 def _base_event_fields() -> dict[str, Any]:
@@ -102,3 +105,16 @@ def make_source_event() -> Callable[..., SourceEvent]:
         return SourceEvent.model_validate(fields)
 
     return _make
+
+
+@pytest.fixture
+def shipped_settings_path() -> Path:
+    return SHIPPED_SETTINGS_PATH
+
+
+@pytest.fixture
+def config_copy(tmp_path: Path) -> Path:
+    """Writable copy of the shipped config tree; returns the copied settings file."""
+    target = tmp_path / "config"
+    shutil.copytree(CONFIG_DIR, target)
+    return target / "caseforge.yaml"

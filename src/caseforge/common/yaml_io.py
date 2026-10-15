@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +15,21 @@ _MERGE_TAG = "tag:yaml.org,2002:merge"
 
 
 class _UniqueKeyLoader(yaml.SafeLoader):
-    """SafeLoader variant that rejects duplicate mapping keys."""
+    """SafeLoader variant: duplicate mapping keys rejected, YAML 1.2 booleans only.
+
+    YAML 1.1 treats yes/no/on/off as booleans, which silently corrupts values such
+    as a mode named "off". Only true/false (in standard capitalizations) are booleans.
+    """
+
+
+_BOOL_TAG = "tag:yaml.org,2002:bool"
+_UniqueKeyLoader.yaml_implicit_resolvers = {
+    first: [(tag, regexp) for tag, regexp in resolvers if tag != _BOOL_TAG]
+    for first, resolvers in yaml.SafeLoader.yaml_implicit_resolvers.items()
+}
+_UniqueKeyLoader.add_implicit_resolver(
+    _BOOL_TAG, re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"), list("tTfF")
+)
 
 
 def _construct_unique_mapping(
@@ -59,3 +74,11 @@ def load_yaml_mapping(path: str | Path) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ConfigError(f"{path} must contain a YAML mapping at the top level")
     return data
+
+
+def parse_yaml_value(text: str) -> Any:
+    """Parse a single YAML value (for example an environment override) strictly."""
+    try:
+        return yaml.load(text, Loader=_UniqueKeyLoader)
+    except yaml.YAMLError as exc:
+        raise ConfigError(f"invalid YAML value {text!r}: {exc}") from exc

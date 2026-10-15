@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from caseforge.common.errors import ConfigError
-from caseforge.common.yaml_io import load_yaml_mapping
+from caseforge.common.yaml_io import load_yaml_mapping, parse_yaml_value
 
 
 def _write(tmp_path: Path, text: str) -> Path:
@@ -37,3 +37,18 @@ def test_rejects_non_mapping(tmp_path: Path) -> None:
 def test_missing_file(tmp_path: Path) -> None:
     with pytest.raises(ConfigError, match="not found"):
         load_yaml_mapping(tmp_path / "absent.yaml")
+
+
+@pytest.mark.parametrize("text", ["off", "on", "yes", "no", "Off", "NO"])
+def test_yaml_11_boolean_words_stay_strings(text: str) -> None:
+    assert parse_yaml_value(text) == text
+
+
+@pytest.mark.parametrize(("text", "expected"), [("true", True), ("false", False), ("True", True)])
+def test_yaml_12_booleans_parsed(text: str, expected: bool) -> None:
+    assert parse_yaml_value(text) is expected
+
+
+def test_file_values_use_same_boolean_rules(tmp_path: Path) -> None:
+    path = _write(tmp_path, "mode: off\nenabled: true\n")
+    assert load_yaml_mapping(path) == {"mode": "off", "enabled": True}

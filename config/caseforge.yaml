@@ -1,0 +1,13 @@
+# CaseForge engine settings. Paths are POSIX-style and relative to this file.
+# Override any value with CASEFORGE__SECTION__KEY=value (for example CASEFORGE__RUN__SEED=7).
+# Secrets never belong in this file.
+settings_version: 1
+run:
+  seed: 20261015
+  tenant_id: tenant-demo
+vocabulary:
+  canonical: vocabulary/canonical.v1.yaml
+  mappings:
+    - vocabulary/mappings/sim.v1.yaml
+provenance:
+  snapshot_mode: redacted   # full | redacted | off
