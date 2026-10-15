@@ -34,3 +34,18 @@ templates:
     probability: 0.85
     offset_minutes: [600, 2880]
     attributes: {kind: {choice: [draft_form, unrelated_attachment]}, channel: upload}
+dynamics:
+  horizon_minutes: 4320
+  unobservable_probability: 0.1
+  resolution_delay_minutes: [120, 2880]
+  resolution_events:
+    - id: right_doc
+      source_type: doc.in
+      actor: req
+      entity: d1
+      offset_minutes: [0, 0]
+      attributes: {kind: signed_form, channel: upload}
+  actions:
+    send_reminder: {request_overlooked: 0.8, wrong_document: 0.2}
+    request_document: {request_overlooked: 0.6, wrong_document: 0.85}
+    escalate_case: {request_overlooked: 0.4, wrong_document: 0.4}

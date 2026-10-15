@@ -1,4 +1,4 @@
-"""Scenario family specifications: latent blockers, event templates and observation noise."""
+"""Scenario family specifications: latent blockers, event templates, noise and dynamics."""
 
 from __future__ import annotations
 
@@ -61,6 +61,7 @@ class EventTemplate(_Spec):
 
     probability: chance the event happens at all (ground truth).
     drop_probability: chance a happened event is not observed (observation loss).
+    offset_minutes: relative to world start, or to resolution time for resolution events.
     """
 
     id: Name
@@ -79,6 +80,26 @@ class EventTemplate(_Spec):
         return self
 
 
+class Dynamics(_Spec):
+    """Simulated effect of operator actions and how their outcomes become observable.
+
+    actions maps action type -> blocker -> probability that the action resolves the
+    blocker. Unlisted actions or blockers have probability 0. These are synthetic
+    assumptions, not real-world effect estimates.
+    """
+
+    horizon_minutes: int = Field(gt=0)
+    unobservable_probability: Probability = 0.0
+    resolution_delay_minutes: MinuteRange
+    resolution_events: tuple[EventTemplate, ...] = ()
+    actions: dict[Name, dict[Name, Probability]] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _check_delay(self) -> Dynamics:
+        _check_range(self.resolution_delay_minutes, "resolution_delay_minutes")
+        return self
+
+
 class ScenarioFamily(_Spec):
     """Versioned, seeded generator description for one family of synthetic cases."""
 
@@ -91,16 +112,19 @@ class ScenarioFamily(_Spec):
     variables: dict[Name, Choice] = Field(default_factory=dict)
     recording_delay_minutes: MinuteRange = (0, 0)
     templates: tuple[EventTemplate, ...] = Field(min_length=1)
+    dynamics: Dynamics | None = None
 
     @model_validator(mode="after")
     def _check_references(self) -> ScenarioFamily:
         _check_range(self.recording_delay_minutes, "recording_delay_minutes")
         problems: list[str] = []
-        ids = [template.id for template in self.templates]
+        dynamics = self.dynamics
+        all_templates = (*self.templates, *(dynamics.resolution_events if dynamics else ()))
+        ids = [template.id for template in all_templates]
         duplicates = sorted({i for i in ids if ids.count(i) > 1})
         if duplicates:
             problems.append(f"duplicate template ids {duplicates}")
-        for template in self.templates:
+        for template in all_templates:
             unknown = sorted((template.when_blocker or frozenset()) - self.blockers.keys())
             if unknown:
                 problems.append(f"template {template.id!r}: unknown blockers {unknown}")
@@ -108,9 +132,31 @@ class ScenarioFamily(_Spec):
             undefined = sorted(used - self.variables.keys())
             if undefined:
                 problems.append(f"template {template.id!r}: undefined variables {undefined}")
+        if dynamics is not None:
+            problems.extend(self._check_dynamics(dynamics))
         if problems:
             raise ValueError("; ".join(problems))
         return self
+
+    def _check_dynamics(self, dynamics: Dynamics) -> list[str]:
+        problems: list[str] = []
+        for action, probabilities in sorted(dynamics.actions.items()):
+            unknown = sorted(probabilities.keys() - self.blockers.keys())
+            if unknown:
+                problems.append(f"action {action!r}: unknown blockers {unknown}")
+        for name, blocker in sorted(self.blockers.items()):
+            best = max(p.get(name, 0.0) for p in dynamics.actions.values())
+            for action in sorted(blocker.effective_actions):
+                if action not in dynamics.actions:
+                    problems.append(
+                        f"blocker {name!r}: effective action {action!r} not in dynamics.actions"
+                    )
+                elif dynamics.actions[action].get(name, 0.0) < best:
+                    problems.append(
+                        f"blocker {name!r}: effective action {action!r} "
+                        "is not the most effective action"
+                    )
+        return problems
 
 
 def load_family(path: str | Path) -> ScenarioFamily:

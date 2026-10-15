@@ -55,3 +55,17 @@ templates:
     probability: 0.8
     offset_minutes: [1440, 1500]
     attributes: {due: {at_minutes: 1440}}
+dynamics:
+  horizon_minutes: 2880
+  unobservable_probability: 0.05
+  resolution_delay_minutes: [60, 1440]
+  resolution_events:
+    - id: task_main_done
+      source_type: tsk.done
+      actor: ops
+      entity: t1
+      offset_minutes: [0, 0]
+  actions:
+    send_reminder: {reminder_needed: 0.85, owner_overloaded: 0.15}
+    reassign_task: {reminder_needed: 0.6, owner_overloaded: 0.8}
+    escalate_case: {reminder_needed: 0.5, owner_overloaded: 0.5}

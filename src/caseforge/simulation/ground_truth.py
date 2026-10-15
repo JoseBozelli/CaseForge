@@ -4,7 +4,22 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, JsonValue
 
-from caseforge.events.envelope import NonEmptyStr
+from caseforge.events.envelope import NonEmptyStr, UtcDatetime
+
+
+class ActionTruth(BaseModel):
+    """Hidden effect of one applied action."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    action_id: NonEmptyStr
+    action_type: NonEmptyStr
+    acted_at: UtcDatetime
+    resolve_probability: float
+    already_resolved: bool
+    resolved: bool
+    resolution_at: UtcDatetime | None
+    outcome_observable: bool
 
 
 class GroundTruth(BaseModel):
@@ -22,3 +37,5 @@ class GroundTruth(BaseModel):
     variables: dict[str, JsonValue]
     occurred_event_ids: tuple[str, ...]
     dropped_event_ids: tuple[str, ...]
+    actions: tuple[ActionTruth, ...] = ()
+    resolved_by: str | None = None

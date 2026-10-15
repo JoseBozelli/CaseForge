@@ -62,6 +62,24 @@ def _undefined_variable(d):
     d["templates"][0]["attributes"]["cat"] = {"var": "ghost"}
 
 
+_DYNAMICS = {"horizon_minutes": 60, "resolution_delay_minutes": [0, 10]}
+
+
+def _ineffective_declared(d):
+    d["dynamics"] = {
+        **_DYNAMICS,
+        "actions": {"send_reminder": {"only": 0.2}, "escalate_case": {"only": 0.9}},
+    }
+
+
+def _dynamics_unknown_blocker(d):
+    d["dynamics"] = {**_DYNAMICS, "actions": {"send_reminder": {"only": 0.9, "ghost": 0.1}}}
+
+
+def _effective_not_listed(d):
+    d["dynamics"] = {**_DYNAMICS, "actions": {"escalate_case": {"only": 0.9}}}
+
+
 def test_shipped_families_load() -> None:
     families = load_families(FAMILIES_DIR)
     assert [f.family_id for f in families] == ["missing-document", "routine-stalled-task"]
@@ -80,6 +98,9 @@ def test_minimal_family_is_valid() -> None:
         (_zero_weight, "weight"),
         (_empty_choice, "choice"),
         (_undefined_variable, "undefined variables"),
+        (_ineffective_declared, "most effective"),
+        (_dynamics_unknown_blocker, "unknown blockers"),
+        (_effective_not_listed, "not in dynamics.actions"),
     ],
 )
 def test_invalid_family_rejected(mutate, message: str) -> None:
