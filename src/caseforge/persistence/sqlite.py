@@ -7,16 +7,14 @@ are upgraded by a forward-only migration chain; unknown versions are refused.
 
 from __future__ import annotations
 
-import sqlite3
-import threading
-from collections.abc import Callable, Iterable, Iterator
-from contextlib import contextmanager
+from collections.abc import Callable, Iterable
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Final, TypeVar
 
 from pydantic import BaseModel
 
+from caseforge.common.sqlite import SqliteDatabase
 from caseforge.events.envelope import EventEnvelope
 from caseforge.events.mapping import Rejection
 from caseforge.persistence.codec import (
@@ -46,9 +44,6 @@ from caseforge.tools.models import ToolInvocationRecord
 SCHEMA_VERSION: Final = "records.v2"
 R = TypeVar("R", bound=BaseModel)
 
-_SCHEMA_INFO: Final = (
-    "CREATE TABLE IF NOT EXISTS schema_info (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
-)
 _V1_STATEMENTS: Final = (
     """CREATE TABLE IF NOT EXISTS run_manifests (
         run_id TEXT PRIMARY KEY,
@@ -109,7 +104,6 @@ _V2_STATEMENTS: Final = (
         payload TEXT NOT NULL
     )""",
 )
-# from-version -> (to-version, statements); applied in order until SCHEMA_VERSION
 _MIGRATIONS: Final = {"records.v1": ("records.v2", _V2_STATEMENTS)}
 
 
@@ -122,17 +116,14 @@ class SqliteRecordStore:
     """Durable RecordStore backed by one SQLite file."""
 
     def __init__(self, path: str | Path) -> None:
-        self._path = Path(path)
-        self._path.parent.mkdir(parents=True, exist_ok=True)
-        self._lock = threading.Lock()
-        self._conn = sqlite3.connect(self._path, isolation_level=None, check_same_thread=False)
-        try:
-            self._conn.execute("PRAGMA journal_mode=WAL")
-            self._conn.execute("PRAGMA busy_timeout=5000")
-            self._initialize()
-        except BaseException:
-            self._conn.close()
-            raise
+        self._db = SqliteDatabase(
+            path,
+            label="records",
+            schema_version=SCHEMA_VERSION,
+            base_statements=(*_V1_STATEMENTS, *_V2_STATEMENTS),
+            migrations=_MIGRATIONS,
+            error=RecordStoreError,
+        )
 
     def __enter__(self) -> SqliteRecordStore:
         return self
@@ -141,47 +132,13 @@ class SqliteRecordStore:
         self.close()
 
     def close(self) -> None:
-        self._conn.close()
-
-    @contextmanager
-    def _transaction(self) -> Iterator[sqlite3.Connection]:
-        with self._lock:
-            self._conn.execute("BEGIN IMMEDIATE")
-            try:
-                yield self._conn
-            except BaseException:
-                self._conn.execute("ROLLBACK")
-                raise
-            self._conn.execute("COMMIT")
-
-    def _initialize(self) -> None:
-        with self._transaction() as conn:
-            conn.execute(_SCHEMA_INFO)
-            row = conn.execute("SELECT value FROM schema_info WHERE key = 'schema'").fetchone()
-            if row is None:
-                for statement in (*_V1_STATEMENTS, *_V2_STATEMENTS):
-                    conn.execute(statement)
-                conn.execute(
-                    "INSERT INTO schema_info (key, value) VALUES ('schema', ?)", (SCHEMA_VERSION,)
-                )
-                return
-            version = row[0]
-            while version != SCHEMA_VERSION:
-                step = _MIGRATIONS.get(version)
-                if step is None:
-                    raise RecordStoreError(
-                        f"unsupported records schema {version!r}; expected {SCHEMA_VERSION!r}"
-                    )
-                version, statements = step
-                for statement in statements:
-                    conn.execute(statement)
-            conn.execute("UPDATE schema_info SET value = ? WHERE key = 'schema'", (version,))
+        self._db.close()
 
     # manifests, events and rejections
 
     def save_manifest(self, manifest: RunManifest) -> None:
         payload, digest = manifest.to_json_bytes().decode("utf-8"), manifest.sha256()
-        with self._transaction() as conn:
+        with self._db.transaction() as conn:
             row = conn.execute(
                 "SELECT sha256 FROM run_manifests WHERE run_id = ?", (manifest.run_id,)
             ).fetchone()
@@ -196,8 +153,8 @@ class SqliteRecordStore:
                 )
 
     def get_manifest(self, run_id: str) -> RunManifest | None:
-        with self._lock:
-            row = self._conn.execute(
+        with self._db.reading() as conn:
+            row = conn.execute(
                 "SELECT payload FROM run_manifests WHERE run_id = ?", (run_id,)
             ).fetchone()
         return None if row is None else RunManifest.model_validate_json(row[0])
@@ -206,7 +163,7 @@ class SqliteRecordStore:
         inserted: list[str] = []
         duplicates: list[str] = []
         conflicts: list[str] = []
-        with self._transaction() as conn:
+        with self._db.transaction() as conn:
             for event in events:
                 payload, digest = encode_event(event)
                 row = conn.execute(
@@ -235,8 +192,8 @@ class SqliteRecordStore:
         return IntakeResult(tuple(inserted), tuple(duplicates), tuple(conflicts))
 
     def events_for_case(self, tenant_id: str, case_id: str) -> tuple[EventEnvelope, ...]:
-        with self._lock:
-            rows = self._conn.execute(
+        with self._db.reading() as conn:
+            rows = conn.execute(
                 "SELECT payload FROM events WHERE tenant_id = ? AND case_id = ? "
                 "ORDER BY recorded_key, event_id",
                 (tenant_id, case_id),
@@ -245,7 +202,7 @@ class SqliteRecordStore:
 
     def save_rejections(self, rejections: Iterable[Rejection]) -> int:
         count = 0
-        with self._transaction() as conn:
+        with self._db.transaction() as conn:
             for rejection in rejections:
                 cursor = conn.execute(
                     "INSERT OR IGNORE INTO rejections "
@@ -270,8 +227,8 @@ class SqliteRecordStore:
         if source_system is not None:
             query += " WHERE source_system = ?"
             params = (source_system,)
-        with self._lock:
-            rows = self._conn.execute(query + " ORDER BY seq", params).fetchall()
+        with self._db.reading() as conn:
+            rows = conn.execute(query + " ORDER BY seq", params).fetchall()
         return tuple(decode_rejection(row[0]) for row in rows)
 
     # model and tool call records (append-only)
@@ -280,7 +237,7 @@ class SqliteRecordStore:
         self, table: str, id_column: str, records: Iterable[R], identity: Callable[[R], str]
     ) -> int:
         count = 0
-        with self._transaction() as conn:
+        with self._db.transaction() as conn:
             for record in records:
                 payload, digest = encode_model(record)
                 cursor = conn.execute(
@@ -292,8 +249,8 @@ class SqliteRecordStore:
         return count
 
     def _list(self, table: str, run_id: str, model: type[R]) -> tuple[R, ...]:
-        with self._lock:
-            rows = self._conn.execute(
+        with self._db.reading() as conn:
+            rows = conn.execute(
                 f"SELECT payload FROM {table} WHERE run_id = ? ORDER BY seq", (run_id,)
             ).fetchall()
         return tuple(model.model_validate_json(row[0]) for row in rows)
@@ -315,7 +272,7 @@ class SqliteRecordStore:
     def save_decision(self, record: DecisionRecord) -> DecisionSave:
         payload, _ = encode_model(record)
         material = record.material_sha256()
-        with self._transaction() as conn:
+        with self._db.transaction() as conn:
             row = conn.execute(
                 "SELECT material_sha256, payload FROM decisions WHERE run_id = ?",
                 (record.run_id,),
@@ -330,8 +287,8 @@ class SqliteRecordStore:
         return DecisionSave(stored, "duplicate" if row[0] == material else "conflict")
 
     def get_decision(self, run_id: str) -> DecisionRecord | None:
-        with self._lock:
-            row = self._conn.execute(
+        with self._db.reading() as conn:
+            row = conn.execute(
                 "SELECT payload FROM decisions WHERE run_id = ?", (run_id,)
             ).fetchone()
         return None if row is None else DecisionRecord.model_validate_json(row[0])
@@ -342,7 +299,7 @@ class SqliteRecordStore:
         if entry.status != LedgerStatus.INTENT:
             raise LedgerTransitionError("a ledger entry must begin in the intent status")
         payload, _ = encode_model(entry)
-        with self._transaction() as conn:
+        with self._db.transaction() as conn:
             row = conn.execute(
                 "SELECT payload FROM action_ledger WHERE idempotency_key = ?",
                 (entry.idempotency_key,),
@@ -365,7 +322,7 @@ class SqliteRecordStore:
         result: dict[str, Any] | None = None,
         error: str | None = None,
     ) -> ActionLedgerEntry:
-        with self._transaction() as conn:
+        with self._db.transaction() as conn:
             row = conn.execute(
                 "SELECT payload FROM action_ledger WHERE idempotency_key = ?",
                 (idempotency_key,),
@@ -382,8 +339,8 @@ class SqliteRecordStore:
         return updated
 
     def get_action(self, idempotency_key: str) -> ActionLedgerEntry | None:
-        with self._lock:
-            row = self._conn.execute(
+        with self._db.reading() as conn:
+            row = conn.execute(
                 "SELECT payload FROM action_ledger WHERE idempotency_key = ?",
                 (idempotency_key,),
             ).fetchone()

@@ -17,6 +17,7 @@ storage:
   checkpoints_path: ../data/checkpoints.db
 simulation:
   families_dir: simulation/families
+  store_path: ../data/simulation.db
   start_at: "2026-01-05T09:00:00Z"
   investigate_after_minutes: 1560
 triage:

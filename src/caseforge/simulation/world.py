@@ -71,6 +71,18 @@ class SimulatedWorld:
     def tenant_id(self) -> str:
         return self._ctx.tenant_id
 
+    @property
+    def family_id(self) -> str:
+        return self._ctx.family.family_id
+
+    @property
+    def seed(self) -> int:
+        return self._seed
+
+    @property
+    def start_at(self) -> datetime:
+        return self._ctx.start
+
     def observable_view(self, as_of: datetime) -> ObservableWorld:
         """Snapshot of events recorded by as_of; contains no ground-truth information."""
         as_of = _utc(as_of, "as_of")

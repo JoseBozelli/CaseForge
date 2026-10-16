@@ -128,7 +128,8 @@ def test_rerun_with_a_different_decision_uses_the_committed_one(config_copy) -> 
     assert final["action"]["decision_status"] == "conflict"
     assert final["action"]["action_type"] == "escalate_case"
     assert final["action"]["applied"] is False
-    assert world.ground_truth().actions == ()
+    assert [a.action_type for a in world.ground_truth().actions] == ["escalate_case"]
+    assert final["outcome"]["status"] == "pending"
 
 
 def test_failed_execution_is_recorded_then_retried_on_rerun(config_copy) -> None:

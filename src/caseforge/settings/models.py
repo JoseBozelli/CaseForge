@@ -78,6 +78,7 @@ class StorageSettings(_Section):
 
 class SimulationSettings(_Section):
     families_dir: RelativePath
+    store_path: RelativePath = "../data/simulation.db"
     start_at: UtcDatetime
     investigate_after_minutes: int = Field(ge=0)
 

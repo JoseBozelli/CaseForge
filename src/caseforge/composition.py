@@ -11,6 +11,7 @@ from typing import Any
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 from caseforge.adapters.simulation import SimulatedEnvironment
+from caseforge.adapters.simulation_log import SqliteSimulationLog
 from caseforge.agents.supervisor import Supervisor
 from caseforge.agents.workers import Worker, evidence_worker, policy_worker
 from caseforge.common.hashing import sha256_hex
@@ -83,7 +84,10 @@ class Container:
         except BaseException:
             self.store.close()
             raise
-        self.environment = SimulatedEnvironment()
+        self.provider = TemplateSimulationProvider(loaded.families)
+        self._simulation_log = SqliteSimulationLog(base / settings.simulation.store_path)
+        self.environment = SimulatedEnvironment(self.provider, self._simulation_log)
+        self.environment.restore()
         self.reasoner = reasoner or _default_reasoner(loaded, base)
         reasoning, provenance, agents = settings.reasoning, settings.provenance, settings.agents
         self.caller = StructuredCaller(
@@ -114,7 +118,6 @@ class Container:
                 max_steps=agents.policy.max_steps,
             ),
         }
-        self.provider = TemplateSimulationProvider(loaded.families)
         deps = EngineDeps(
             store=self.store,
             normalizers={
@@ -143,6 +146,7 @@ class Container:
 
     def close(self) -> None:
         self._checkpoint_conn.close()
+        self._simulation_log.close()
         self.store.close()
 
     def open_simulated_case(self, family_id: str, seed: int) -> SimulatedWorld:
@@ -152,14 +156,12 @@ class Container:
         engine only ever sees the environment's ports.
         """
         settings = self.loaded.settings
-        world = self.provider.create(
+        return self.environment.open_case(
             family_id,
             seed,
             tenant_id=settings.run.tenant_id,
             start_at=settings.simulation.start_at,
         )
-        self.environment.register(world)
-        return world
 
     def default_as_of(self) -> datetime:
         simulation = self.loaded.settings.simulation
