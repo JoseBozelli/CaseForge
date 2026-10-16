@@ -131,6 +131,12 @@ def load_settings(path: str | Path, environ: Mapping[str, str] | None = None) ->
     if not_allowed:
         raise ConfigError(f"triage actions not in agents.supervisor.allowed_actions {not_allowed}")
 
+    escalation = settings.engine.escalation_action
+    if escalation not in agents.supervisor.allowed_actions:
+        raise ConfigError(
+            f"engine.escalation_action {escalation!r} not in agents.supervisor.allowed_actions"
+        )
+
     families_dir = (base / settings.simulation.families_dir).resolve()
     families = load_families(families_dir)
     family_paths = tuple(sorted(families_dir.glob("*.yaml")))

@@ -89,6 +89,13 @@ class KnowledgeSettings(_Section):
     min_score: float = Field(default=1.0, ge=0)
 
 
+class EngineSettings(_Section):
+    """deterministic: rules only (baseline). hierarchical: rule fast path, then agents."""
+
+    mode: Literal["deterministic", "hierarchical"] = "hierarchical"
+    escalation_action: Name
+
+
 class Settings(_Section):
     """Root settings document. Secrets never belong here."""
 
@@ -103,3 +110,4 @@ class Settings(_Section):
     knowledge: KnowledgeSettings
     reasoning: ReasoningSettings
     agents: AgentSettings
+    engine: EngineSettings

@@ -124,6 +124,11 @@ class Container:
             case_source=self.environment,
             executor=self.environment,
             outcomes=self.environment,
+            tools=self.tools,
+            supervisor=self.supervisor,
+            workers=self.workers,
+            mode=settings.engine.mode,
+            escalation_action=settings.engine.escalation_action,
         )
         self.graph = build_case_graph(deps).compile(checkpointer=SqliteSaver(self._checkpoint_conn))
 
@@ -166,6 +171,14 @@ class Container:
             "tenant_id": self.loaded.settings.run.tenant_id,
             "case_id": case_id,
             "as_of": moment.isoformat(),
+            "case_summary": None,
+            "plan": None,
+            "synthesis": None,
+            "synthesis_round": 0,
+            "decision": None,
+            "worker_results": None,
+            "llm_calls": None,
+            "tool_calls": None,
             "trace": [],
         }
         return self.graph.invoke(state, {"configurable": {"thread_id": run_id}})

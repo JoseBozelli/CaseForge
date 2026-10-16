@@ -26,6 +26,7 @@ def test_s1_case_runs_end_to_end(container) -> None:
         "rule_id": "stalled-task-reminder",
         "action_type": "send_reminder",
         "event_types": ["case.created", "task.delayed", "task.requested"],
+        "route": "fast_path",
     }
     assert final["action"]["applied"] is True
     assert final["outcome"]["status"] == "pending"

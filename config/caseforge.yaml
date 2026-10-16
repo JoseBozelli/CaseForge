@@ -54,3 +54,6 @@ agents:
     allowed_actions: [send_reminder, request_document, reassign_task, escalate_case, grant_policy_exception]
   evidence: {prompt_version: 1, max_steps: 4}
   policy: {prompt_version: 1, max_steps: 3}
+engine:
+  mode: hierarchical        # deterministic (rules only) | hierarchical (rule fast path, then agents)
+  escalation_action: escalate_case

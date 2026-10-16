@@ -91,8 +91,21 @@ class Worker:
         self._tools = tools
 
     def run(
-        self, *, run_id: str, tenant_id: str, case_id: str, as_of: datetime, question: str
+        self,
+        *,
+        run_id: str,
+        tenant_id: str,
+        case_id: str,
+        as_of: datetime,
+        question: str,
+        round_index: int = 0,
     ) -> WorkerResult:
+        """Run one bounded investigation.
+
+        round_index offsets recorded step numbers so a worker asked again in a
+        clarification round gets distinct call and invocation ids.
+        """
+        offset = round_index * self._max_steps
         llm_calls: list[LlmCallRecord] = []
         tool_calls: list[ToolInvocationRecord] = []
         transcript: list[dict[str, Any]] = []
@@ -119,7 +132,9 @@ class Worker:
                     "tools": _json(self._tools.describe(self.name)),
                     "transcript": _json(transcript),
                 }
-                context = CallContext(run_id=run_id, case_id=case_id, node=self.name, step=step)
+                context = CallContext(
+                    run_id=run_id, case_id=case_id, node=self.name, step=offset + step
+                )
                 try:
                     call = self._caller.call(
                         self._template_id,
@@ -157,7 +172,7 @@ class Worker:
                         case_id=case_id,
                         as_of=as_of,
                         agent=self.name,
-                        step=step,
+                        step=offset + step,
                     ),
                 )
                 tool_calls.append(outcome.record)
