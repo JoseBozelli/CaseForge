@@ -16,6 +16,8 @@ class SimulatedEnvironment:
     evaluation code reads ground truth from the SimulatedWorld handles it created.
     """
 
+    supports_idempotency_keys = True  # SimulatedWorld.apply_action ignores repeated ids
+
     def __init__(self) -> None:
         self._worlds: dict[tuple[str, str], SimulatedWorld] = {}
 

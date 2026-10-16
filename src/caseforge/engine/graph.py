@@ -6,14 +6,15 @@ synthesize -> act (proposal) | escalate (escalation, invalid, failed)
            | run_worker (bounded clarification) -> synthesize
 escalate -> act -> observe
 
-State holds only JSON-compatible values; dependencies are bound by closure. Fields
-with the _accumulate reducer are reset by passing None at the start of a run.
+act commits the decision (first committed decision per run wins) and executes through
+the action ledger, so an interrupted run never repeats an action blindly.
+State holds only JSON-compatible values; dependencies are bound by closure.
 """
 
 from __future__ import annotations
 
 import operator
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Annotated, Any, Literal, TypedDict
@@ -28,8 +29,13 @@ from caseforge.engine.triage import TriagePolicy
 from caseforge.events.envelope import EventEnvelope
 from caseforge.events.mapping import EventNormalizer, Rejection
 from caseforge.persistence.ports import RecordStore
+from caseforge.persistence.records import ActionLedgerEntry, DecisionRecord, LedgerStatus
 from caseforge.tools.models import ToolCall, ToolContext
 from caseforge.tools.registry import ToolRegistry
+
+
+def no_fault(point: str) -> None:
+    """Default fault hook: does nothing. Tests inject crashes at named points."""
 
 
 def _accumulate(current: list[Any] | None, update: list[Any] | None) -> list[Any]:
@@ -82,6 +88,8 @@ class EngineDeps:
     workers: Mapping[str, Worker]
     mode: Literal["deterministic", "hierarchical"]
     escalation_action: str
+    clock: Callable[[], datetime]
+    fault: Callable[[str], None] = no_fault
 
 
 def _as_of(state: Mapping[str, Any]) -> datetime:
@@ -180,6 +188,7 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
                 step=0,
             ),
         )
+        deps.store.save_tool_invocations([summary_call.record])
         update: CaseRunState = {"tool_calls": _dump([summary_call.record])}
         if not summary_call.result.ok:
             error = f"case summary unavailable ({summary_call.result.error_code})"
@@ -190,6 +199,8 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         result = deps.supervisor.plan(
             run_id=state["run_id"], case_id=state["case_id"], case_summary=summary
         )
+        if result.llm_call:
+            deps.store.save_llm_calls([result.llm_call])
         ok = result.status == SupervisorStatus.OK and result.output is not None
         workers = list(result.output["workers"]) if ok else []
         update["case_summary"] = summary
@@ -218,6 +229,8 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
             question=task["question"],
             round_index=task["round"],
         )
+        deps.store.save_llm_calls(result.llm_calls)
+        deps.store.save_tool_invocations(result.tool_calls)
         summary = {
             "worker": result.worker,
             "round": task["round"],
@@ -249,6 +262,8 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
             worker_results=state.get("worker_results") or [],
             round_index=round_index,
         )
+        if result.llm_call:
+            deps.store.save_llm_calls([result.llm_call])
         output = result.output
         decision = output.get("decision") if output else None
         update: CaseRunState = {
@@ -290,33 +305,114 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         }
 
     def act(state: CaseRunState) -> CaseRunState:
-        decision = state["decision"] or {}
-        action_type = decision["action_type"]
-        action_id = f"{state['run_id']}:{action_type}"
-        applied = deps.executor.execute(
-            tenant_id=state["tenant_id"],
-            case_id=state["case_id"],
-            action_id=action_id,
-            action_type=action_type,
-            at=_as_of(state),
+        proposed = state["decision"] or {}
+        now = deps.clock()
+        committed = deps.store.save_decision(
+            DecisionRecord(
+                run_id=state["run_id"],
+                case_id=state["case_id"],
+                tenant_id=state["tenant_id"],
+                decision_id=f"{state['run_id']}:decision",
+                source=proposed["source"],
+                action_type=proposed["action_type"],
+                rule_id=proposed.get("rule_id"),
+                evidence_refs=tuple(proposed.get("evidence_refs") or ()),
+                reason=proposed.get("reason"),
+                decided_at=now,
+            )
         )
+        decision = committed.stored
+        key = f"{state['run_id']}:{decision.action_type}"
+        entry = deps.store.begin_action(
+            ActionLedgerEntry(
+                idempotency_key=key,
+                run_id=state["run_id"],
+                case_id=state["case_id"],
+                tenant_id=state["tenant_id"],
+                action_type=decision.action_type,
+                created_at=now,
+                updated_at=now,
+            )
+        )
+
+        applied: bool | None = None
+        if entry.status == LedgerStatus.SUCCEEDED:
+            applied = False  # already done; never repeat
+        elif entry.status == LedgerStatus.UNKNOWN:
+            pass  # awaiting reconciliation; never resend blindly
+        elif (
+            entry.status == LedgerStatus.DISPATCHED and not deps.executor.supports_idempotency_keys
+        ):
+            entry = deps.store.transition_action(
+                key, LedgerStatus.UNKNOWN, at=now, error="interrupted after dispatch"
+            )
+        else:
+            # intent or failed: dispatch now. dispatched with an idempotent executor:
+            # resending is safe because the external system ignores repeats.
+            if entry.status != LedgerStatus.DISPATCHED:
+                deps.fault("act.before_dispatch")
+                entry = deps.store.transition_action(key, LedgerStatus.DISPATCHED, at=now)
+            deps.fault("act.after_dispatch")
+            try:
+                applied = deps.executor.execute(
+                    tenant_id=state["tenant_id"],
+                    case_id=state["case_id"],
+                    action_id=key,
+                    action_type=decision.action_type,
+                    at=_as_of(state),
+                )
+            except Exception as exc:  # record the failure; never leave it unrecorded
+                entry = deps.store.transition_action(
+                    key, LedgerStatus.FAILED, at=deps.clock(), error=type(exc).__name__
+                )
+            else:
+                deps.fault("act.after_execute")
+                entry = deps.store.transition_action(
+                    key, LedgerStatus.SUCCEEDED, at=deps.clock(), result={"applied": applied}
+                )
+                deps.fault("act.after_record")
+
         record = {
-            "action_id": action_id,
-            "action_type": action_type,
-            "source": decision["source"],
+            "action_id": key,
+            "action_type": decision.action_type,
+            "source": decision.source,
             "acted_at": state["as_of"],
             "applied": applied,
+            "ledger_status": str(entry.status),
+            "attempts": entry.attempts,
+            "decision_status": committed.status,
         }
-        trace = {"node": "act", "action_id": action_id, "applied": applied}
+        trace = {
+            "node": "act",
+            "action_id": key,
+            "applied": applied,
+            "ledger_status": str(entry.status),
+        }
         return {"action": record, "trace": [trace]}
 
     def observe(state: CaseRunState) -> CaseRunState:
-        observation = deps.outcomes.observe(
-            tenant_id=state["tenant_id"],
-            case_id=state["case_id"],
-            action_id=state["action"]["action_id"],
-            as_of=_as_of(state),
-        )
+        action = state["action"]
+        if action["ledger_status"] != LedgerStatus.SUCCEEDED:
+            outcome = {
+                "action_id": action["action_id"],
+                "status": "unavailable",
+                "reason": f"action {action['ledger_status']}",
+            }
+            return {"outcome": outcome, "trace": [{"node": "observe", "status": "unavailable"}]}
+        try:
+            observation = deps.outcomes.observe(
+                tenant_id=state["tenant_id"],
+                case_id=state["case_id"],
+                action_id=action["action_id"],
+                as_of=_as_of(state),
+            )
+        except Exception as exc:  # an outcome source failure never fails the run
+            outcome = {
+                "action_id": action["action_id"],
+                "status": "unavailable",
+                "reason": f"outcome source error ({type(exc).__name__})",
+            }
+            return {"outcome": outcome, "trace": [{"node": "observe", "status": "unavailable"}]}
         trace = {"node": "observe", "status": str(observation.status)}
         return {"outcome": observation.model_dump(mode="json"), "trace": [trace]}
 

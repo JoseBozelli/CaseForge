@@ -14,7 +14,7 @@ from caseforge.adapters.simulation import SimulatedEnvironment
 from caseforge.agents.supervisor import Supervisor
 from caseforge.agents.workers import Worker, evidence_worker, policy_worker
 from caseforge.common.hashing import sha256_hex
-from caseforge.engine.graph import EngineDeps, build_case_graph
+from caseforge.engine.graph import EngineDeps, build_case_graph, no_fault
 from caseforge.events.mapping import EventNormalizer
 from caseforge.knowledge.bm25 import Bm25KnowledgeProvider
 from caseforge.memory.empty import EmptyEpisodeProvider
@@ -57,6 +57,7 @@ class Container:
         project_root: Path,
         clock: Clock,
         reasoner: Reasoner | None = None,
+        fault_injector: Callable[[str], None] | None = None,
     ) -> None:
         settings = loaded.settings
         base = loaded.settings_path.parent
@@ -129,6 +130,8 @@ class Container:
             workers=self.workers,
             mode=settings.engine.mode,
             escalation_action=settings.engine.escalation_action,
+            clock=clock,
+            fault=fault_injector or no_fault,
         )
         self.graph = build_case_graph(deps).compile(checkpointer=SqliteSaver(self._checkpoint_conn))
 
@@ -183,6 +186,10 @@ class Container:
         }
         return self.graph.invoke(state, {"configurable": {"thread_id": run_id}})
 
+    def resume(self, run_id: str) -> dict[str, Any]:
+        """Continue an interrupted run from its last checkpoint."""
+        return self.graph.invoke(None, {"configurable": {"thread_id": run_id}})
+
     def _record_manifest(self, run_id: str) -> None:
         existing = self.store.get_manifest(run_id)
         if existing is None:
@@ -208,7 +215,11 @@ def build_container(
     project_root: str | Path | None = None,
     clock: Clock = _system_clock,
     reasoner: Reasoner | None = None,
+    fault_injector: Callable[[str], None] | None = None,
 ) -> Container:
+    """Build the application. fault_injector is a test-only seam for crash simulation."""
     loaded = load_settings(settings_path, environ=environ)
     root = Path(project_root) if project_root else loaded.settings_path.parent.parent
-    return Container(loaded, project_root=root, clock=clock, reasoner=reasoner)
+    return Container(
+        loaded, project_root=root, clock=clock, reasoner=reasoner, fault_injector=fault_injector
+    )

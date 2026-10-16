@@ -16,6 +16,9 @@ class CaseSource(Protocol):
 
 
 class ActionExecutor(Protocol):
+    supports_idempotency_keys: bool
+    """True when the external system ignores repeats of the same action id."""
+
     def execute(
         self, *, tenant_id: str, case_id: str, action_id: str, action_type: str, at: datetime
     ) -> bool:
