@@ -9,7 +9,12 @@ from caseforge.events.mapping import EventNormalizer, load_mapping
 from caseforge.persistence.errors import LedgerTransitionError, RecordStoreError
 from caseforge.persistence.memory import InMemoryRecordStore
 from caseforge.persistence.ports import RecordConflictError
-from caseforge.persistence.records import ActionLedgerEntry, DecisionRecord, LedgerStatus
+from caseforge.persistence.records import (
+    ActionLedgerEntry,
+    ApprovalRecord,
+    DecisionRecord,
+    LedgerStatus,
+)
 from caseforge.persistence.sqlite import SqliteRecordStore
 from caseforge.provenance.manifest import GitState, build_run_manifest
 from caseforge.reasoning.models import LlmCallRecord, TokenUsage
@@ -287,3 +292,24 @@ def test_retry_and_unknown_paths(store) -> None:
 def test_transition_of_unknown_action_is_rejected(store) -> None:
     with pytest.raises(RecordStoreError, match="unknown action"):
         store.transition_action("ghost", LedgerStatus.DISPATCHED, at=_at(1))
+
+
+def _approval(decision: str = "approved") -> ApprovalRecord:
+    return ApprovalRecord(
+        run_id="run-0001",
+        case_id="case-0001",
+        tenant_id="tenant-a",
+        action_type="grant_policy_exception",
+        decision=decision,
+        actor="approver-1",
+        decided_at=BASE,
+    )
+
+
+def test_approvals_are_append_only(store) -> None:
+    approved, rejected = _approval(), _approval(decision="rejected")
+    assert store.save_approval(approved) is True
+    assert store.save_approval(approved) is False
+    assert store.save_approval(rejected) is True
+    assert store.approvals_for_run("run-0001") == (approved, rejected)
+    assert store.approvals_for_run("run-9999") == ()

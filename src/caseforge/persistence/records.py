@@ -105,3 +105,16 @@ def transition(
         updated_at=at,
     )
     return ActionLedgerEntry.model_validate(data)
+
+
+class ApprovalRecord(_Frozen):
+    """A person's answer to an approval request. Append-only."""
+
+    run_id: NonEmptyStr
+    case_id: NonEmptyStr
+    tenant_id: NonEmptyStr
+    action_type: Name
+    decision: Literal["approved", "rejected"]
+    actor: NonEmptyStr
+    note: str | None = Field(default=None, max_length=500)
+    decided_at: UtcDatetime

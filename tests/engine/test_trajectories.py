@@ -96,7 +96,13 @@ def test_policy_question_uses_policy_worker_only(config_copy) -> None:
         "policy": [APPROVAL_SEARCH, APPROVAL_FINISH],
         "supervisor_synthesis": [_propose("grant_policy_exception", [APPROVAL])],
     }
-    final, world = _run(config_copy, "policy-question", 1, script)
+    with build_container(
+        config_copy, environ={}, reasoner=FakeReasoner(script), clock=lambda: FIXED
+    ) as container:
+        world = container.open_simulated_case("policy-question", 1)
+        container.run_case("run-0001", world.case_id)
+        assert container.pending_approval("run-0001")["action_type"] == "grant_policy_exception"
+        final = container.approve("run-0001", actor="approver-1")
     assert _workers_run(final) == ["policy"]
     plan_step = next(s for s in final["trace"] if s["node"] == "supervisor_plan")
     assert plan_step["skipped"] == ["evidence"]

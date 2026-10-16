@@ -53,7 +53,7 @@ def test_v1_database_is_migrated_to_v2(tmp_path: Path, make_event) -> None:
     with SqliteRecordStore(path) as store:
         store.append_events([make_event()])
     conn = sqlite3.connect(path)
-    for table in ("llm_calls", "tool_invocations", "decisions", "action_ledger"):
+    for table in ("llm_calls", "tool_invocations", "decisions", "action_ledger", "approvals"):
         conn.execute(f"DROP TABLE {table}")
     conn.execute("UPDATE schema_info SET value = 'records.v1' WHERE key = 'schema'")
     conn.commit()
@@ -66,7 +66,7 @@ def test_v1_database_is_migrated_to_v2(tmp_path: Path, make_event) -> None:
     conn = sqlite3.connect(path)
     version = conn.execute("SELECT value FROM schema_info WHERE key = 'schema'").fetchone()[0]
     conn.close()
-    assert version == "records.v2"
+    assert version == "records.v3"
 
 
 def test_ledger_state_survives_reopen(tmp_path: Path) -> None:

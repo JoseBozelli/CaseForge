@@ -95,6 +95,7 @@ class EngineSettings(_Section):
 
     mode: Literal["deterministic", "hierarchical"] = "hierarchical"
     escalation_action: Name
+    approval_required: frozenset[Name] = frozenset()
 
 
 class Settings(_Section):

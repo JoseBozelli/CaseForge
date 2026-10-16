@@ -32,6 +32,7 @@ from caseforge.persistence.errors import (
 from caseforge.persistence.ports import IntakeResult
 from caseforge.persistence.records import (
     ActionLedgerEntry,
+    ApprovalRecord,
     DecisionRecord,
     DecisionSave,
     LedgerStatus,
@@ -41,7 +42,7 @@ from caseforge.provenance.manifest import RunManifest
 from caseforge.reasoning.models import LlmCallRecord
 from caseforge.tools.models import ToolInvocationRecord
 
-SCHEMA_VERSION: Final = "records.v2"
+SCHEMA_VERSION: Final = "records.v3"
 R = TypeVar("R", bound=BaseModel)
 
 _V1_STATEMENTS: Final = (
@@ -104,7 +105,19 @@ _V2_STATEMENTS: Final = (
         payload TEXT NOT NULL
     )""",
 )
-_MIGRATIONS: Final = {"records.v1": ("records.v2", _V2_STATEMENTS)}
+_V3_STATEMENTS: Final = (
+    """CREATE TABLE IF NOT EXISTS approvals (
+        seq INTEGER PRIMARY KEY AUTOINCREMENT,
+        run_id TEXT NOT NULL,
+        sha256 TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        UNIQUE (run_id, sha256)
+    )""",
+)
+_MIGRATIONS: Final = {
+    "records.v1": ("records.v2", _V2_STATEMENTS),
+    "records.v2": ("records.v3", _V3_STATEMENTS),
+}
 
 
 def _time_key(moment: datetime) -> str:
@@ -120,7 +133,7 @@ class SqliteRecordStore:
             path,
             label="records",
             schema_version=SCHEMA_VERSION,
-            base_statements=(*_V1_STATEMENTS, *_V2_STATEMENTS),
+            base_statements=(*_V1_STATEMENTS, *_V2_STATEMENTS, *_V3_STATEMENTS),
             migrations=_MIGRATIONS,
             error=RecordStoreError,
         )
@@ -345,3 +358,17 @@ class SqliteRecordStore:
                 (idempotency_key,),
             ).fetchone()
         return None if row is None else ActionLedgerEntry.model_validate_json(row[0])
+
+    # approvals (append-only)
+
+    def save_approval(self, record: ApprovalRecord) -> bool:
+        payload, digest = encode_model(record)
+        with self._db.transaction() as conn:
+            cursor = conn.execute(
+                "INSERT OR IGNORE INTO approvals (run_id, sha256, payload) VALUES (?, ?, ?)",
+                (record.run_id, digest, payload),
+            )
+        return cursor.rowcount == 1
+
+    def approvals_for_run(self, run_id: str) -> tuple[ApprovalRecord, ...]:
+        return self._list("approvals", run_id, ApprovalRecord)

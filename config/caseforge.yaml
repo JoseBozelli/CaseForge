@@ -58,3 +58,5 @@ agents:
 engine:
   mode: hierarchical        # deterministic (rules only) | hierarchical (rule fast path, then agents)
   escalation_action: escalate_case
+  approval_required: [grant_policy_exception]
+  

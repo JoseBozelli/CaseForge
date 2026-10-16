@@ -19,6 +19,7 @@ from caseforge.persistence.errors import (
 from caseforge.persistence.ports import IntakeResult
 from caseforge.persistence.records import (
     ActionLedgerEntry,
+    ApprovalRecord,
     DecisionRecord,
     DecisionSave,
     LedgerStatus,
@@ -58,6 +59,8 @@ class InMemoryRecordStore:
         self._tool_keys: set[tuple[str, str]] = set()
         self._decisions: dict[str, DecisionRecord] = {}
         self._ledger: dict[str, ActionLedgerEntry] = {}
+        self._approvals: list[ApprovalRecord] = []
+        self._approval_keys: set[tuple[str, str]] = set()
 
     def __enter__(self) -> InMemoryRecordStore:
         return self
@@ -166,3 +169,11 @@ class InMemoryRecordStore:
 
     def get_action(self, idempotency_key: str) -> ActionLedgerEntry | None:
         return self._ledger.get(idempotency_key)
+
+    def save_approval(self, record: ApprovalRecord) -> bool:
+        return (
+            _append_unique(self._approvals, self._approval_keys, [record], lambda r: r.run_id) == 1
+        )
+
+    def approvals_for_run(self, run_id: str) -> tuple[ApprovalRecord, ...]:
+        return tuple(r for r in self._approvals if r.run_id == run_id)

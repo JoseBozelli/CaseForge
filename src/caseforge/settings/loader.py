@@ -137,6 +137,13 @@ def load_settings(path: str | Path, environ: Mapping[str, str] | None = None) ->
             f"engine.escalation_action {escalation!r} not in agents.supervisor.allowed_actions"
         )
 
+    needs_approval = sorted(settings.engine.approval_required - agents.supervisor.allowed_actions)
+    if needs_approval:
+        raise ConfigError(
+            "engine.approval_required actions not in agents.supervisor.allowed_actions "
+            f"{needs_approval}"
+        )
+
     families_dir = (base / settings.simulation.families_dir).resolve()
     families = load_families(families_dir)
     family_paths = tuple(sorted(families_dir.glob("*.yaml")))

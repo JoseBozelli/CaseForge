@@ -14,6 +14,7 @@ from caseforge.persistence.errors import RecordConflictError as RecordConflictEr
 from caseforge.persistence.errors import RecordStoreError as RecordStoreError
 from caseforge.persistence.records import (
     ActionLedgerEntry,
+    ApprovalRecord,
     DecisionRecord,
     DecisionSave,
     LedgerStatus,
@@ -78,5 +79,9 @@ class RecordStore(Protocol):
     ) -> ActionLedgerEntry: ...
 
     def get_action(self, idempotency_key: str) -> ActionLedgerEntry | None: ...
+
+    def save_approval(self, record: ApprovalRecord) -> bool: ...
+
+    def approvals_for_run(self, run_id: str) -> tuple[ApprovalRecord, ...]: ...
 
     def close(self) -> None: ...

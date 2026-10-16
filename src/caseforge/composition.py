@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.types import Command
 
 from caseforge.adapters.simulation import SimulatedEnvironment
 from caseforge.adapters.simulation_log import SqliteSimulationLog
@@ -135,6 +136,7 @@ class Container:
             escalation_action=settings.engine.escalation_action,
             clock=clock,
             fault=fault_injector or no_fault,
+            approval_required=settings.engine.approval_required,
         )
         self.graph = build_case_graph(deps).compile(checkpointer=SqliteSaver(self._checkpoint_conn))
 
@@ -181,12 +183,40 @@ class Container:
             "synthesis": None,
             "synthesis_round": 0,
             "decision": None,
+            "approval": None,
             "worker_results": None,
             "llm_calls": None,
             "tool_calls": None,
             "trace": [],
         }
         return self.graph.invoke(state, {"configurable": {"thread_id": run_id}})
+
+    def pending_approval(self, run_id: str) -> dict[str, Any] | None:
+        """The approval request a run is paused on, or None."""
+        state = self.graph.get_state({"configurable": {"thread_id": run_id}})
+        for task in state.tasks:
+            for item in task.interrupts:
+                return dict(item.value)
+        return None
+
+    def approve(self, run_id: str, *, actor: str, note: str | None = None) -> dict[str, Any]:
+        return self._answer_approval(run_id, "approved", actor, note)
+
+    def reject(self, run_id: str, *, actor: str, note: str | None = None) -> dict[str, Any]:
+        return self._answer_approval(run_id, "rejected", actor, note)
+
+    def _answer_approval(
+        self, run_id: str, decision: str, actor: str, note: str | None
+    ) -> dict[str, Any]:
+        if self.pending_approval(run_id) is None:
+            raise ValueError(f"run {run_id!r} is not awaiting approval")
+        response = {
+            "decision": decision,
+            "actor": actor,
+            "note": note,
+            "decided_at": self._clock().astimezone(UTC).isoformat(),
+        }
+        return self.graph.invoke(Command(resume=response), {"configurable": {"thread_id": run_id}})
 
     def resume(self, run_id: str) -> dict[str, Any]:
         """Continue an interrupted run from its last checkpoint."""

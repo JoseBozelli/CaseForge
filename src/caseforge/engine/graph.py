@@ -1,13 +1,13 @@
-"""Case graph with a deterministic fast path and a supervised, parallel worker path.
+"""Case graph with a deterministic fast path, a supervised parallel worker path and an
+approval gate.
 
-intake -> triage -> act (rule matched, or deterministic mode)
+intake -> triage -> [approval_gate] -> act (rule matched, or deterministic mode)
                  -> supervisor_plan -> run_worker x N (parallel via Send) -> synthesize
-synthesize -> act (proposal) | escalate (escalation, invalid, failed)
-           | run_worker (bounded clarification) -> synthesize
-escalate -> act -> observe
+synthesize -> [approval_gate] -> act | escalate | run_worker (bounded clarification)
+escalate -> [approval_gate] -> act -> observe
 
-act commits the decision (first committed decision per run wins) and executes through
-the action ledger, so an interrupted run never repeats an action blindly.
+approval_gate has no side effects before it pauses. act commits the decision (first
+committed decision per run wins), enforces approval, and executes through the ledger.
 State holds only JSON-compatible values; dependencies are bound by closure.
 """
 
@@ -15,12 +15,12 @@ from __future__ import annotations
 
 import operator
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Annotated, Any, Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
-from langgraph.types import Send
+from langgraph.types import Send, interrupt
 
 from caseforge.agents.supervisor import Supervisor, SupervisorStatus
 from caseforge.agents.workers import Worker
@@ -29,7 +29,12 @@ from caseforge.engine.triage import TriagePolicy
 from caseforge.events.envelope import EventEnvelope
 from caseforge.events.mapping import EventNormalizer, Rejection
 from caseforge.persistence.ports import RecordStore
-from caseforge.persistence.records import ActionLedgerEntry, DecisionRecord, LedgerStatus
+from caseforge.persistence.records import (
+    ActionLedgerEntry,
+    ApprovalRecord,
+    DecisionRecord,
+    LedgerStatus,
+)
 from caseforge.tools.models import ToolCall, ToolContext
 from caseforge.tools.registry import ToolRegistry
 
@@ -57,6 +62,7 @@ class CaseRunState(TypedDict, total=False):
     synthesis: dict[str, Any] | None
     synthesis_round: int
     decision: dict[str, Any] | None
+    approval: dict[str, Any] | None
     action: dict[str, Any]
     outcome: dict[str, Any]
     worker_results: Annotated[list[dict[str, Any]], _accumulate]
@@ -90,6 +96,7 @@ class EngineDeps:
     escalation_action: str
     clock: Callable[[], datetime]
     fault: Callable[[str], None] = no_fault
+    approval_required: frozenset[str] = field(default_factory=frozenset)
 
 
 def _as_of(state: Mapping[str, Any]) -> datetime:
@@ -304,6 +311,40 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
             "trace": [{"node": "escalate", "reason": reason}],
         }
 
+    def approval_gate(state: CaseRunState) -> CaseRunState:
+        # Everything before interrupt() runs again on resume, so it only reads.
+        proposed = state["decision"] or {}
+        committed = deps.store.get_decision(state["run_id"])
+        action_type = committed.action_type if committed else proposed["action_type"]
+        if action_type not in deps.approval_required:
+            return {"trace": [{"node": "approval_gate", "skipped": "approval not required"}]}
+        existing = deps.store.get_action(f"{state['run_id']}:{action_type}")
+        if existing is not None and existing.status == LedgerStatus.SUCCEEDED:
+            return {"trace": [{"node": "approval_gate", "skipped": "already executed"}]}
+        response = interrupt(
+            {
+                "run_id": state["run_id"],
+                "case_id": state["case_id"],
+                "action_type": action_type,
+                "source": committed.source if committed else proposed["source"],
+                "evidence_refs": list(proposed.get("evidence_refs") or []),
+                "reason": proposed.get("reason"),
+            }
+        )
+        record = ApprovalRecord(
+            run_id=state["run_id"],
+            case_id=state["case_id"],
+            tenant_id=state["tenant_id"],
+            action_type=action_type,
+            decision=response["decision"],
+            actor=response["actor"],
+            note=response.get("note"),
+            decided_at=response["decided_at"],
+        )
+        deps.store.save_approval(record)
+        trace = {"node": "approval_gate", "decision": record.decision, "actor": record.actor}
+        return {"approval": record.model_dump(mode="json"), "trace": [trace]}
+
     def act(state: CaseRunState) -> CaseRunState:
         proposed = state["decision"] or {}
         now = deps.clock()
@@ -323,6 +364,38 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         )
         decision = committed.stored
         key = f"{state['run_id']}:{decision.action_type}"
+
+        existing = deps.store.get_action(key)
+        already_done = existing is not None and existing.status == LedgerStatus.SUCCEEDED
+        approval = state.get("approval")
+        approved = (
+            approval is not None
+            and approval["decision"] == "approved"
+            and approval["action_type"] == decision.action_type
+        )
+        if decision.action_type in deps.approval_required and not approved and not already_done:
+            rejected = approval is not None and approval["decision"] == "rejected"
+            reason = "approval rejected" if rejected else "approval missing"
+            record = {
+                "action_id": key,
+                "action_type": decision.action_type,
+                "source": decision.source,
+                "acted_at": state["as_of"],
+                "applied": None,
+                "ledger_status": "not_executed",
+                "attempts": 0,
+                "decision_status": committed.status,
+                "reason": reason,
+            }
+            trace = {
+                "node": "act",
+                "action_id": key,
+                "applied": None,
+                "ledger_status": "not_executed",
+                "reason": reason,
+            }
+            return {"action": record, "trace": [trace]}
+
         entry = deps.store.begin_action(
             ActionLedgerEntry(
                 idempotency_key=key,
@@ -416,8 +489,14 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         trace = {"node": "observe", "status": str(observation.status)}
         return {"outcome": observation.model_dump(mode="json"), "trace": [trace]}
 
+    def to_execution(state: CaseRunState) -> str:
+        action_type = (state.get("decision") or {}).get("action_type")
+        return "approval_gate" if action_type in deps.approval_required else "act"
+
     def route_after_triage(state: CaseRunState) -> str:
-        return "act" if state["triage"]["route"] == "fast_path" else "supervisor_plan"
+        if state["triage"]["route"] == "fast_path":
+            return to_execution(state)
+        return "supervisor_plan"
 
     def route_after_plan(state: CaseRunState) -> str | list[Send]:
         plan = state["plan"] or {}
@@ -434,7 +513,7 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
             return "escalate"
         output = synthesis["output"]
         if output["decision"] == "propose_action":
-            return "act"
+            return to_execution(state)
         if output["decision"] == "clarify":
             clarification = output["clarification"]
             return [
@@ -454,19 +533,23 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
     builder.add_node("run_worker", run_worker)
     builder.add_node("synthesize", synthesize)
     builder.add_node("escalate", escalate)
+    builder.add_node("approval_gate", approval_gate)
     builder.add_node("act", act)
     builder.add_node("observe", observe)
     builder.add_edge(START, "intake")
     builder.add_edge("intake", "triage")
-    builder.add_conditional_edges("triage", route_after_triage, ["act", "supervisor_plan"])
+    builder.add_conditional_edges(
+        "triage", route_after_triage, ["act", "approval_gate", "supervisor_plan"]
+    )
     builder.add_conditional_edges(
         "supervisor_plan", route_after_plan, ["escalate", "synthesize", "run_worker"]
     )
     builder.add_edge("run_worker", "synthesize")
     builder.add_conditional_edges(
-        "synthesize", route_after_synthesis, ["act", "escalate", "run_worker"]
+        "synthesize", route_after_synthesis, ["act", "approval_gate", "escalate", "run_worker"]
     )
-    builder.add_edge("escalate", "act")
+    builder.add_conditional_edges("escalate", to_execution, ["act", "approval_gate"])
+    builder.add_edge("approval_gate", "act")
     builder.add_edge("act", "observe")
     builder.add_edge("observe", END)
     return builder
