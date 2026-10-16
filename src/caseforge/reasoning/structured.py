@@ -20,6 +20,7 @@ from caseforge.reasoning.models import (
     ReasonerResponse,
 )
 from caseforge.reasoning.ports import (
+    CallBudget,
     OutputValidationError,
     Reasoner,
     ReasonerCallError,
@@ -93,7 +94,9 @@ class StructuredCaller:
         *,
         clock: Callable[[], datetime],
         snapshots: SnapshotWriter | None = None,
+        budget: CallBudget | None = None,
     ) -> None:
+        self._budget = budget
         self._reasoner = reasoner
         self._prompts = prompts
         self._model = model
@@ -141,6 +144,8 @@ class StructuredCaller:
         }
 
         try:
+            if self._budget is not None:
+                self._budget.before_call(context)
             response = self._reasoner.complete(request)
         except ReasonerError as exc:
             record = LlmCallRecord(
@@ -153,6 +158,8 @@ class StructuredCaller:
             )
             raise ReasonerCallError(str(exc), record) from exc
 
+        if self._budget is not None:
+            self._budget.after_call(context, response.usage)
         snapshot_ref = self._snapshot(context, request, response)
         try:
             output = output_model.model_validate(response.output)

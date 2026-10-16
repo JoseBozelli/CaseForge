@@ -47,6 +47,9 @@ reasoning:
   params: {temperature: 0}
   prompts_dir: prompts
   cassette_path: ../data/cassettes/default.jsonl
+  pricing:                  # USD per million tokens; set from verified prices before paid runs
+    input_usd_per_million: 0.0
+    output_usd_per_million: 0.0
 agents:
   supervisor:
     plan_version: 1
@@ -73,3 +76,8 @@ governance:
     viewer-1: [viewer]
     approver-1: [approver]
     admin-1: [admin]
+  budgets:
+    max_llm_calls: 20
+    max_total_tokens: 60000
+    max_cost_usd: 0.25
+    max_tool_calls: 30

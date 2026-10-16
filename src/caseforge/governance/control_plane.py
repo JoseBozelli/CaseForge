@@ -12,10 +12,11 @@ from datetime import datetime
 from typing import Any
 
 from caseforge.governance.guards import EmergencyStopEngaged
-from caseforge.governance.models import AuditEntry, SwitchState
+from caseforge.governance.models import AuditEntry, BudgetDecision, RunUsage, SwitchState
 from caseforge.governance.permissions import EMERGENCY_STOP, PERMISSIONS
 from caseforge.governance.store import GovernanceStore
-from caseforge.settings.models import GovernanceSettings
+from caseforge.reasoning.models import TokenUsage
+from caseforge.settings.models import GovernanceSettings, ModelPricing
 
 
 class PermissionDenied(Exception):
@@ -32,10 +33,12 @@ class ControlPlane:
         settings: GovernanceSettings,
         *,
         clock: Callable[[], datetime],
+        pricing: ModelPricing | None = None,
     ) -> None:
         self._store = store
         self._settings = settings
         self._clock = clock
+        self._pricing = pricing or ModelPricing()
 
     def roles_of(self, actor: str) -> frozenset[str]:
         return self._settings.operators.get(actor, frozenset())
@@ -137,3 +140,35 @@ class ControlPlane:
         action = "emergency_stop.engaged" if engaged else "emergency_stop.released"
         self.record(actor, action, target=STOP_SWITCH, detail=detail)
         return state
+
+    # per-run budgets
+
+    def reserve_llm_call(self, run_id: str) -> BudgetDecision:
+        return self._audited(
+            run_id, "model", self._store.reserve_llm_call(run_id, self._settings.budgets)
+        )
+
+    def record_llm_usage(self, run_id: str, usage: TokenUsage) -> RunUsage:
+        cost = (
+            usage.input_tokens * self._pricing.input_usd_per_million
+            + usage.output_tokens * self._pricing.output_usd_per_million
+        ) / 1_000_000
+        return self._store.add_llm_usage(run_id, usage.input_tokens, usage.output_tokens, cost)
+
+    def reserve_tool_call(self, run_id: str) -> BudgetDecision:
+        return self._audited(
+            run_id, "tool", self._store.reserve_tool_call(run_id, self._settings.budgets)
+        )
+
+    def run_usage(self, run_id: str) -> RunUsage:
+        return self._store.run_usage(run_id)
+
+    def _audited(self, run_id: str, kind: str, decision: BudgetDecision) -> BudgetDecision:
+        if not decision.allowed:
+            self.record(
+                "system",
+                "budget.exhausted",
+                target=run_id,
+                detail={"kind": kind, "reason": decision.reason},
+            )
+        return decision

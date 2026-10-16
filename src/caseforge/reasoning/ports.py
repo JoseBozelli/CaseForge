@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from caseforge.reasoning.models import LlmCallRecord, ReasonerRequest, ReasonerResponse
+from caseforge.reasoning.models import (
+    CallContext,
+    LlmCallRecord,
+    ReasonerRequest,
+    ReasonerResponse,
+    TokenUsage,
+)
 
 
 class ReasonerError(RuntimeError):
@@ -29,3 +35,17 @@ class OutputValidationError(ReasonerCallError):
 
 class Reasoner(Protocol):
     def complete(self, request: ReasonerRequest) -> ReasonerResponse: ...
+
+
+class BudgetExhausted(ReasonerError):
+    """A model call was refused because the run's budget is spent."""
+
+
+class CallBudget(Protocol):
+    """Checked by StructuredCaller around every model call."""
+
+    def before_call(self, context: CallContext) -> None:
+        """Reserve one call or raise BudgetExhausted."""
+        ...
+
+    def after_call(self, context: CallContext, usage: TokenUsage) -> None: ...

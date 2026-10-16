@@ -18,8 +18,10 @@ from caseforge.agents.workers import Worker, evidence_worker, policy_worker
 from caseforge.common.hashing import sha256_hex
 from caseforge.engine.graph import EngineDeps, build_case_graph, no_fault
 from caseforge.events.mapping import EventNormalizer
+from caseforge.governance.budgets import LlmBudget
 from caseforge.governance.control_plane import ControlPlane
 from caseforge.governance.guards import EmergencyStopEngaged, GovernedReasoner, GovernedTools
+from caseforge.governance.models import RunUsage
 from caseforge.governance.permissions import APPROVE_ACTION
 from caseforge.governance.store import GovernanceStore
 from caseforge.knowledge.bm25 import Bm25KnowledgeProvider
@@ -103,8 +105,13 @@ class Container:
         self.environment = SimulatedEnvironment(self.provider, self._simulation_log)
         self.environment.restore()
         self._governance_store = GovernanceStore(base / settings.governance.store_path)
-        self.control_plane = ControlPlane(self._governance_store, settings.governance, clock=clock)
-        self._governed_tools = GovernedTools(self.tools, self._guard)
+        self.control_plane = ControlPlane(
+            self._governance_store,
+            settings.governance,
+            clock=clock,
+            pricing=settings.reasoning.pricing,
+        )
+        self._governed_tools = GovernedTools(self.tools, self._guard, budget=self.control_plane)
         self.reasoner = GovernedReasoner(reasoner or _default_reasoner(loaded, base), self._guard)
         reasoning, provenance, agents = settings.reasoning, settings.provenance, settings.agents
         self.caller = StructuredCaller(
@@ -113,6 +120,7 @@ class Container:
             ModelSpec(provider=reasoning.provider, model=reasoning.model, params=reasoning.params),
             clock=clock,
             snapshots=SnapshotWriter(base / provenance.snapshot_dir, provenance.snapshot_mode),
+            budget=LlmBudget(self.control_plane),
         )
         self.supervisor = Supervisor(
             caller=self.caller,
@@ -241,6 +249,10 @@ class Container:
         if not final.get("halted"):
             self.control_plane.record(actor, f"approval.{decision}", target=run_id, detail=detail)
         return final
+
+    def run_usage(self, run_id: str) -> RunUsage:
+        """Spend counted for a run (model calls, tokens, estimated cost, tool calls)."""
+        return self.control_plane.run_usage(run_id)
 
     def _guard(self, boundary: str) -> None:
         self.control_plane.check(boundary)

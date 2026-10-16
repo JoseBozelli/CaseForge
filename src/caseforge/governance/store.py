@@ -13,9 +13,10 @@ from typing import Final
 
 from caseforge.common.hashing import canonical_json_bytes
 from caseforge.common.sqlite import SqliteDatabase
-from caseforge.governance.models import AuditEntry, SwitchState
+from caseforge.governance.models import AuditEntry, BudgetDecision, RunUsage, SwitchState
+from caseforge.settings.models import BudgetSettings
 
-SCHEMA_VERSION: Final = "governance.v2"
+SCHEMA_VERSION: Final = "governance.v3"
 _STATEMENTS: Final = (
     """CREATE TABLE IF NOT EXISTS audit_log (
         seq INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,6 +41,16 @@ _V2_STATEMENTS: Final = (
         changed_at TEXT NOT NULL
     )""",
 )
+_V3_STATEMENTS: Final = (
+    """CREATE TABLE IF NOT EXISTS run_usage (
+        run_id TEXT PRIMARY KEY,
+        llm_calls INTEGER NOT NULL DEFAULT 0,
+        input_tokens INTEGER NOT NULL DEFAULT 0,
+        output_tokens INTEGER NOT NULL DEFAULT 0,
+        cost_usd REAL NOT NULL DEFAULT 0,
+        tool_calls INTEGER NOT NULL DEFAULT 0
+    )""",
+)
 
 
 class GovernanceError(RuntimeError):
@@ -52,8 +63,11 @@ class GovernanceStore:
             path,
             label="governance",
             schema_version=SCHEMA_VERSION,
-            base_statements=(*_STATEMENTS, *_V2_STATEMENTS),
-            migrations={"governance.v1": ("governance.v2", _V2_STATEMENTS)},
+            base_statements=(*_STATEMENTS, *_V2_STATEMENTS, *_V3_STATEMENTS),
+            migrations={
+                "governance.v1": ("governance.v2", _V2_STATEMENTS),
+                "governance.v2": ("governance.v3", _V3_STATEMENTS),
+            },
             error=GovernanceError,
         )
 
@@ -128,4 +142,70 @@ class GovernanceStore:
             return None
         return SwitchState(
             name=row[0], engaged=bool(row[1]), actor=row[2], reason=row[3], changed_at=row[4]
+        )
+
+    # per-run budgets: check and count in one transaction
+
+    def run_usage(self, run_id: str) -> RunUsage:
+        with self._db.transaction() as conn:
+            return self._usage(conn, run_id)
+
+    def reserve_llm_call(self, run_id: str, limits: BudgetSettings) -> BudgetDecision:
+        with self._db.transaction() as conn:
+            usage = self._usage(conn, run_id)
+            reason = None
+            if usage.llm_calls >= limits.max_llm_calls:
+                reason = f"model call limit reached ({limits.max_llm_calls})"
+            elif usage.total_tokens >= limits.max_total_tokens:
+                reason = f"token limit reached ({limits.max_total_tokens})"
+            elif usage.cost_usd >= limits.max_cost_usd:
+                reason = f"cost limit reached ({limits.max_cost_usd} USD)"
+            if reason is not None:
+                return BudgetDecision(allowed=False, reason=reason, usage=usage)
+            conn.execute(
+                "UPDATE run_usage SET llm_calls = llm_calls + 1 WHERE run_id = ?", (run_id,)
+            )
+            return BudgetDecision(allowed=True, usage=self._usage(conn, run_id))
+
+    def add_llm_usage(
+        self, run_id: str, input_tokens: int, output_tokens: int, cost_usd: float
+    ) -> RunUsage:
+        with self._db.transaction() as conn:
+            self._usage(conn, run_id)
+            conn.execute(
+                "UPDATE run_usage SET input_tokens = input_tokens + ?, "
+                "output_tokens = output_tokens + ?, cost_usd = cost_usd + ? WHERE run_id = ?",
+                (input_tokens, output_tokens, cost_usd, run_id),
+            )
+            return self._usage(conn, run_id)
+
+    def reserve_tool_call(self, run_id: str, limits: BudgetSettings) -> BudgetDecision:
+        with self._db.transaction() as conn:
+            usage = self._usage(conn, run_id)
+            if usage.tool_calls >= limits.max_tool_calls:
+                return BudgetDecision(
+                    allowed=False,
+                    reason=f"tool call limit reached ({limits.max_tool_calls})",
+                    usage=usage,
+                )
+            conn.execute(
+                "UPDATE run_usage SET tool_calls = tool_calls + 1 WHERE run_id = ?", (run_id,)
+            )
+            return BudgetDecision(allowed=True, usage=self._usage(conn, run_id))
+
+    @staticmethod
+    def _usage(conn, run_id: str) -> RunUsage:
+        conn.execute("INSERT OR IGNORE INTO run_usage (run_id) VALUES (?)", (run_id,))
+        row = conn.execute(
+            "SELECT llm_calls, input_tokens, output_tokens, cost_usd, tool_calls "
+            "FROM run_usage WHERE run_id = ?",
+            (run_id,),
+        ).fetchone()
+        return RunUsage(
+            run_id=run_id,
+            llm_calls=row[0],
+            input_tokens=row[1],
+            output_tokens=row[2],
+            cost_usd=row[3],
+            tool_calls=row[4],
         )

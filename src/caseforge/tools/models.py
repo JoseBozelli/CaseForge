@@ -43,6 +43,7 @@ class ToolErrorCode(StrEnum):
     NOT_PERMITTED = "not_permitted"
     INVALID_ARGUMENTS = "invalid_arguments"
     TOOL_ERROR = "tool_error"
+    BUDGET_EXHAUSTED = "budget_exhausted"
 
 
 class ToolResult(_Frozen):

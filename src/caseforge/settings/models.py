@@ -38,6 +38,13 @@ class ProvenanceSettings(_Section):
     snapshot_dir: RelativePath = "../data/snapshots"
 
 
+class ModelPricing(_Section):
+    """USD per million tokens; set from verified provider prices before any paid run."""
+
+    input_usd_per_million: float = Field(default=0.0, ge=0)
+    output_usd_per_million: float = Field(default=0.0, ge=0)
+
+
 class ReasoningSettings(_Section):
     """fake: scripted outputs injected by tests; replay: responses from a recorded cassette."""
 
@@ -46,6 +53,7 @@ class ReasoningSettings(_Section):
     params: dict[str, JsonValue] = Field(default_factory=dict)
     prompts_dir: RelativePath
     cassette_path: RelativePath | None = None
+    pricing: ModelPricing = Field(default_factory=ModelPricing)
 
     @model_validator(mode="after")
     def _replay_needs_cassette(self) -> ReasoningSettings:
@@ -107,12 +115,22 @@ class MemorySettings(_Section):
     min_score: float = Field(default=0.5, ge=0)
 
 
+class BudgetSettings(_Section):
+    """Hard limits per run, counted durably by the Control Plane."""
+
+    max_llm_calls: int = Field(default=20, ge=1)
+    max_total_tokens: int = Field(default=60_000, ge=1)
+    max_cost_usd: float = Field(default=0.25, gt=0)
+    max_tool_calls: int = Field(default=30, ge=1)
+
+
 class GovernanceSettings(_Section):
     """Trusted governance policy. Roles may only grant permissions from the code catalog."""
 
     store_path: RelativePath = "../data/governance.db"
     roles: dict[Name, frozenset[Name]] = Field(min_length=1)
     operators: dict[Identifier, frozenset[Name]] = Field(min_length=1)
+    budgets: BudgetSettings = Field(default_factory=BudgetSettings)
 
     @model_validator(mode="after")
     def _check_references(self) -> GovernanceSettings:

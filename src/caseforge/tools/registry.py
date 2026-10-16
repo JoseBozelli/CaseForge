@@ -127,6 +127,12 @@ class ToolRegistry:
         )
         return ToolOutcome(ToolResult(tool=call.tool, ok=True, output=output_data), record)
 
+    def refuse(
+        self, call: ToolCall, context: ToolContext, code: ToolErrorCode, detail: str
+    ) -> ToolOutcome:
+        """Record and return a refusal decided outside the registry (for example by governance)."""
+        return self._fail(call, context, self._clock(), code, detail)
+
     def _permitted(self, name: str, agent: str) -> bool:
         policy = self._policies.get(name)
         return policy is not None and policy.enabled and agent in policy.allowed_agents
