@@ -10,5 +10,6 @@ from typing import Final
 
 APPROVE_ACTION: Final = "approve_action"
 EMERGENCY_STOP: Final = "emergency_stop"
+MANAGE_BREAKERS: Final = "manage_breakers"
 
-PERMISSIONS: Final = frozenset({APPROVE_ACTION, EMERGENCY_STOP})
+PERMISSIONS: Final = frozenset({APPROVE_ACTION, EMERGENCY_STOP, MANAGE_BREAKERS})

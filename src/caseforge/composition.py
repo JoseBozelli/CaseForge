@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+import time
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -20,7 +21,12 @@ from caseforge.engine.graph import EngineDeps, build_case_graph, no_fault
 from caseforge.events.mapping import EventNormalizer
 from caseforge.governance.budgets import LlmBudget
 from caseforge.governance.control_plane import ControlPlane
-from caseforge.governance.guards import EmergencyStopEngaged, GovernedReasoner, GovernedTools
+from caseforge.governance.guards import (
+    EmergencyStopEngaged,
+    GovernedExecutor,
+    GovernedReasoner,
+    GovernedTools,
+)
 from caseforge.governance.models import RunUsage
 from caseforge.governance.permissions import APPROVE_ACTION
 from caseforge.governance.store import GovernanceStore
@@ -111,8 +117,20 @@ class Container:
             clock=clock,
             pricing=settings.reasoning.pricing,
         )
-        self._governed_tools = GovernedTools(self.tools, self._guard, budget=self.control_plane)
-        self.reasoner = GovernedReasoner(reasoner or _default_reasoner(loaded, base), self._guard)
+        self._governed_tools = GovernedTools(
+            self.tools, self._guard, budget=self.control_plane, breakers=self.control_plane
+        )
+        self.reasoner = GovernedReasoner(
+            reasoner or _default_reasoner(loaded, base), self._guard, breakers=self.control_plane
+        )
+        retries = settings.governance.retries
+        self._governed_executor = GovernedExecutor(
+            self.environment,
+            self.control_plane,
+            max_attempts=retries.max_attempts,
+            backoff_seconds=retries.backoff_seconds,
+            sleep=time.sleep,
+        )
         reasoning, provenance, agents = settings.reasoning, settings.provenance, settings.agents
         self.caller = StructuredCaller(
             self.reasoner,
@@ -151,7 +169,7 @@ class Container:
             },
             triage=settings.triage,
             case_source=self.environment,
-            executor=self.environment,
+            executor=self._governed_executor,
             outcomes=self.environment,
             tools=self._governed_tools,
             supervisor=self.supervisor,

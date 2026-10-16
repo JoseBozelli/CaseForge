@@ -49,3 +49,7 @@ class CallBudget(Protocol):
         ...
 
     def after_call(self, context: CallContext, usage: TokenUsage) -> None: ...
+
+
+class CircuitOpen(ReasonerError):
+    """A model call was refused because the reasoner's circuit breaker is open."""

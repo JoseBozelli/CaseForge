@@ -44,6 +44,7 @@ class ToolErrorCode(StrEnum):
     INVALID_ARGUMENTS = "invalid_arguments"
     TOOL_ERROR = "tool_error"
     BUDGET_EXHAUSTED = "budget_exhausted"
+    CIRCUIT_OPEN = "circuit_open"
 
 
 class ToolResult(_Frozen):

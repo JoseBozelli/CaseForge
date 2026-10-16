@@ -124,6 +124,18 @@ class BudgetSettings(_Section):
     max_tool_calls: int = Field(default=30, ge=1)
 
 
+class BreakerSettings(_Section):
+    failure_threshold: int = Field(default=3, ge=1)
+    cooldown_seconds: float = Field(default=300.0, ge=0)
+
+
+class RetrySettings(_Section):
+    """Executor retries; applied only when the outside world deduplicates by action id."""
+
+    max_attempts: int = Field(default=3, ge=1, le=5)
+    backoff_seconds: float = Field(default=0.5, ge=0)
+
+
 class GovernanceSettings(_Section):
     """Trusted governance policy. Roles may only grant permissions from the code catalog."""
 
@@ -131,6 +143,8 @@ class GovernanceSettings(_Section):
     roles: dict[Name, frozenset[Name]] = Field(min_length=1)
     operators: dict[Identifier, frozenset[Name]] = Field(min_length=1)
     budgets: BudgetSettings = Field(default_factory=BudgetSettings)
+    breakers: BreakerSettings = Field(default_factory=BreakerSettings)
+    retries: RetrySettings = Field(default_factory=RetrySettings)
 
     @model_validator(mode="after")
     def _check_references(self) -> GovernanceSettings:

@@ -58,3 +58,15 @@ class BudgetDecision(BaseModel):
     allowed: bool
     reason: str | None = None
     usage: RunUsage
+
+
+class BreakerState(BaseModel):
+    """Circuit breaker for one resource (reasoner, executor or tool:<name>)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    resource: NonEmptyStr
+    state: Literal["closed", "open", "half_open"]
+    failures: int = 0
+    opened_at: UtcDatetime | None = None
+    updated_at: UtcDatetime

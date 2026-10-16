@@ -132,8 +132,9 @@ def test_rerun_with_a_different_decision_uses_the_committed_one(config_copy) -> 
     assert final["outcome"]["status"] == "pending"
 
 
-def test_failed_execution_is_recorded_then_retried_on_rerun(config_copy) -> None:
-    with _container(config_copy) as container:
+def test_transient_failure_is_retried_within_one_dispatch(config_copy) -> None:
+    environ = {"CASEFORGE__GOVERNANCE__RETRIES__BACKOFF_SECONDS": "0"}
+    with build_container(config_copy, environ=environ, clock=lambda: FIXED) as container:
         world = container.open_simulated_case(S1, 7)
         original = container.environment.execute
         calls = {"count": 0}
@@ -141,6 +142,31 @@ def test_failed_execution_is_recorded_then_retried_on_rerun(config_copy) -> None
         def flaky(**kwargs):
             calls["count"] += 1
             if calls["count"] == 1:
+                raise TimeoutError("external system did not answer")
+            return original(**kwargs)
+
+        container.environment.execute = flaky
+        final = container.run_case("run-0001", world.case_id)
+        entry = container.store.get_action(KEY)
+    assert (entry.status, entry.attempts) == (LedgerStatus.SUCCEEDED, 1)
+    assert calls["count"] == 2
+    assert final["action"]["applied"] is True
+    assert len(world.ground_truth().actions) == 1
+
+
+def test_failed_execution_is_recorded_then_retried_on_rerun(config_copy) -> None:
+    environ = {
+        "CASEFORGE__GOVERNANCE__RETRIES__BACKOFF_SECONDS": "0",
+        "CASEFORGE__GOVERNANCE__RETRIES__MAX_ATTEMPTS": "2",
+    }
+    with build_container(config_copy, environ=environ, clock=lambda: FIXED) as container:
+        world = container.open_simulated_case(S1, 7)
+        original = container.environment.execute
+        calls = {"count": 0}
+
+        def flaky(**kwargs):
+            calls["count"] += 1
+            if calls["count"] <= 2:
                 raise TimeoutError("external system did not answer")
             return original(**kwargs)
 

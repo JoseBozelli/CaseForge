@@ -71,7 +71,7 @@ governance:
   roles:
     viewer: []
     approver: [approve_action]
-    admin: [approve_action, emergency_stop]
+    admin: [approve_action, emergency_stop, manage_breakers]
   operators:
     viewer-1: [viewer]
     approver-1: [approver]
@@ -81,3 +81,9 @@ governance:
     max_total_tokens: 60000
     max_cost_usd: 0.25
     max_tool_calls: 30
+  breakers:
+    failure_threshold: 3
+    cooldown_seconds: 300
+  retries:
+    max_attempts: 3
+    backoff_seconds: 0.5

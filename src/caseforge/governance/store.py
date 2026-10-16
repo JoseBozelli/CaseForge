@@ -8,15 +8,22 @@ that can alter the database schema itself.
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
 from caseforge.common.hashing import canonical_json_bytes
 from caseforge.common.sqlite import SqliteDatabase
-from caseforge.governance.models import AuditEntry, BudgetDecision, RunUsage, SwitchState
+from caseforge.governance.models import (
+    AuditEntry,
+    BreakerState,
+    BudgetDecision,
+    RunUsage,
+    SwitchState,
+)
 from caseforge.settings.models import BudgetSettings
 
-SCHEMA_VERSION: Final = "governance.v3"
+SCHEMA_VERSION: Final = "governance.v4"
 _STATEMENTS: Final = (
     """CREATE TABLE IF NOT EXISTS audit_log (
         seq INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,10 +58,23 @@ _V3_STATEMENTS: Final = (
         tool_calls INTEGER NOT NULL DEFAULT 0
     )""",
 )
+_V4_STATEMENTS: Final = (
+    """CREATE TABLE IF NOT EXISTS breakers (
+        resource TEXT PRIMARY KEY,
+        state TEXT NOT NULL,
+        failures INTEGER NOT NULL,
+        opened_at TEXT,
+        updated_at TEXT NOT NULL
+    )""",
+)
 
 
 class GovernanceError(RuntimeError):
     """Raised for incompatible or unusable governance storage."""
+
+
+def _iso(moment: datetime) -> str:
+    return moment.astimezone(UTC).isoformat()
 
 
 class GovernanceStore:
@@ -63,10 +83,11 @@ class GovernanceStore:
             path,
             label="governance",
             schema_version=SCHEMA_VERSION,
-            base_statements=(*_STATEMENTS, *_V2_STATEMENTS, *_V3_STATEMENTS),
+            base_statements=(*_STATEMENTS, *_V2_STATEMENTS, *_V3_STATEMENTS, *_V4_STATEMENTS),
             migrations={
                 "governance.v1": ("governance.v2", _V2_STATEMENTS),
                 "governance.v2": ("governance.v3", _V3_STATEMENTS),
+                "governance.v3": ("governance.v4", _V4_STATEMENTS),
             },
             error=GovernanceError,
         )
@@ -208,4 +229,83 @@ class GovernanceStore:
             output_tokens=row[2],
             cost_usd=row[3],
             tool_calls=row[4],
+        )
+
+    # circuit breakers
+
+    def get_breaker(self, resource: str) -> BreakerState | None:
+        with self._db.reading() as conn:
+            row = conn.execute(
+                "SELECT resource, state, failures, opened_at, updated_at FROM breakers "
+                "WHERE resource = ?",
+                (resource,),
+            ).fetchone()
+        return None if row is None else self._row_to_breaker(row)
+
+    def breaker_allow(
+        self, resource: str, now: datetime, cooldown_seconds: float
+    ) -> tuple[str, BreakerState]:
+        """Move open -> half_open once the cool-down has passed. Returns (before, after)."""
+        with self._db.transaction() as conn:
+            current = self._breaker(conn, resource, now)
+            cooled = (
+                current.state == "open"
+                and current.opened_at is not None
+                and (now - current.opened_at).total_seconds() >= cooldown_seconds
+            )
+            if cooled:
+                conn.execute(
+                    "UPDATE breakers SET state = 'half_open', updated_at = ? WHERE resource = ?",
+                    (_iso(now), resource),
+                )
+                return current.state, self._breaker(conn, resource, now)
+            return current.state, current
+
+    def breaker_record(
+        self, resource: str, now: datetime, *, success: bool, threshold: int
+    ) -> tuple[str, BreakerState]:
+        with self._db.transaction() as conn:
+            current = self._breaker(conn, resource, now)
+            if success:
+                conn.execute(
+                    "UPDATE breakers SET state = 'closed', failures = 0, opened_at = NULL, "
+                    "updated_at = ? WHERE resource = ?",
+                    (_iso(now), resource),
+                )
+            else:
+                failures = current.failures + 1
+                if current.state == "half_open" or failures >= threshold:
+                    conn.execute(
+                        "UPDATE breakers SET state = 'open', failures = ?, opened_at = ?, "
+                        "updated_at = ? WHERE resource = ?",
+                        (failures, _iso(now), _iso(now), resource),
+                    )
+                else:
+                    conn.execute(
+                        "UPDATE breakers SET failures = ?, updated_at = ? WHERE resource = ?",
+                        (failures, _iso(now), resource),
+                    )
+            return current.state, self._breaker(conn, resource, now)
+
+    def breaker_reset(self, resource: str, now: datetime) -> tuple[str, BreakerState]:
+        return self.breaker_record(resource, now, success=True, threshold=1)
+
+    @classmethod
+    def _breaker(cls, conn, resource: str, now: datetime) -> BreakerState:
+        conn.execute(
+            "INSERT OR IGNORE INTO breakers (resource, state, failures, opened_at, updated_at) "
+            "VALUES (?, 'closed', 0, NULL, ?)",
+            (resource, _iso(now)),
+        )
+        row = conn.execute(
+            "SELECT resource, state, failures, opened_at, updated_at FROM breakers "
+            "WHERE resource = ?",
+            (resource,),
+        ).fetchone()
+        return cls._row_to_breaker(row)
+
+    @staticmethod
+    def _row_to_breaker(row) -> BreakerState:
+        return BreakerState(
+            resource=row[0], state=row[1], failures=row[2], opened_at=row[3], updated_at=row[4]
         )

@@ -12,8 +12,14 @@ from datetime import datetime
 from typing import Any
 
 from caseforge.governance.guards import EmergencyStopEngaged
-from caseforge.governance.models import AuditEntry, BudgetDecision, RunUsage, SwitchState
-from caseforge.governance.permissions import EMERGENCY_STOP, PERMISSIONS
+from caseforge.governance.models import (
+    AuditEntry,
+    BreakerState,
+    BudgetDecision,
+    RunUsage,
+    SwitchState,
+)
+from caseforge.governance.permissions import EMERGENCY_STOP, MANAGE_BREAKERS, PERMISSIONS
 from caseforge.governance.store import GovernanceStore
 from caseforge.reasoning.models import TokenUsage
 from caseforge.settings.models import GovernanceSettings, ModelPricing
@@ -172,3 +178,47 @@ class ControlPlane:
                 detail={"kind": kind, "reason": decision.reason},
             )
         return decision
+
+    # circuit breakers
+
+    def breaker_allows(self, resource: str) -> bool:
+        before, after = self._store.breaker_allow(
+            resource, self._clock(), self._settings.breakers.cooldown_seconds
+        )
+        self._note_breaker(resource, before, after)
+        return after.state != "open"
+
+    def breaker_success(self, resource: str) -> BreakerState:
+        return self._record_breaker(resource, success=True)
+
+    def breaker_failure(self, resource: str) -> BreakerState:
+        return self._record_breaker(resource, success=False)
+
+    def breaker(self, resource: str) -> BreakerState | None:
+        return self._store.get_breaker(resource)
+
+    def reset_breaker(self, actor: str, resource: str) -> BreakerState:
+        target = f"breaker:{resource}"
+        self.require(actor, MANAGE_BREAKERS, target=target)
+        before, after = self._store.breaker_reset(resource, self._clock())
+        self.record(actor, "breaker.reset", target=target, detail={"from": before})
+        return after
+
+    def _record_breaker(self, resource: str, *, success: bool) -> BreakerState:
+        before, after = self._store.breaker_record(
+            resource,
+            self._clock(),
+            success=success,
+            threshold=self._settings.breakers.failure_threshold,
+        )
+        self._note_breaker(resource, before, after)
+        return after
+
+    def _note_breaker(self, resource: str, before: str, after: BreakerState) -> None:
+        if before != after.state:
+            self.record(
+                "system",
+                f"breaker.{after.state}",
+                target=f"breaker:{resource}",
+                detail={"from": before, "failures": after.failures},
+            )
