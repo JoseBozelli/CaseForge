@@ -68,7 +68,7 @@ governance:
   roles:
     viewer: []
     approver: [approve_action]
-    admin: [approve_action]
+    admin: [approve_action, emergency_stop]
   operators:
     viewer-1: [viewer]
     approver-1: [approver]

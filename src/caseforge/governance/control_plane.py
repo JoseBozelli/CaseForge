@@ -11,14 +11,18 @@ from collections.abc import Callable, Mapping
 from datetime import datetime
 from typing import Any
 
-from caseforge.governance.models import AuditEntry
-from caseforge.governance.permissions import PERMISSIONS
+from caseforge.governance.guards import EmergencyStopEngaged
+from caseforge.governance.models import AuditEntry, SwitchState
+from caseforge.governance.permissions import EMERGENCY_STOP, PERMISSIONS
 from caseforge.governance.store import GovernanceStore
 from caseforge.settings.models import GovernanceSettings
 
 
 class PermissionDenied(Exception):
     """Raised when an operator lacks the permission for a governed operation."""
+
+
+STOP_SWITCH = "emergency_stop"
 
 
 class ControlPlane:
@@ -99,3 +103,37 @@ class ControlPlane:
         self, *, action: str | None = None, target: str | None = None
     ) -> tuple[AuditEntry, ...]:
         return self._store.audit_entries(action=action, target=target)
+
+    # emergency stop
+
+    def engage_emergency_stop(self, actor: str, reason: str) -> SwitchState:
+        return self._set_stop(actor, engaged=True, reason=reason)
+
+    def release_emergency_stop(self, actor: str, reason: str = "released") -> SwitchState:
+        return self._set_stop(actor, engaged=False, reason=reason)
+
+    def emergency_stop(self) -> SwitchState | None:
+        return self._store.get_switch(STOP_SWITCH)
+
+    def check(self, boundary: str) -> None:
+        """Raise EmergencyStopEngaged if the stop is engaged. Read fresh on every call."""
+        state = self._store.get_switch(STOP_SWITCH)
+        if state is not None and state.engaged:
+            raise EmergencyStopEngaged(
+                f"emergency stop engaged by {state.actor} ({state.reason}) at {boundary}"
+            )
+
+    def _set_stop(self, actor: str, *, engaged: bool, reason: str) -> SwitchState:
+        detail = {"engaged": engaged, "reason": reason}
+        self.require(actor, EMERGENCY_STOP, target=STOP_SWITCH, detail=detail)
+        state = SwitchState(
+            name=STOP_SWITCH,
+            engaged=engaged,
+            actor=actor,
+            reason=reason,
+            changed_at=self._clock(),
+        )
+        self._store.set_switch(state)
+        action = "emergency_stop.engaged" if engaged else "emergency_stop.released"
+        self.record(actor, action, target=STOP_SWITCH, detail=detail)
+        return state

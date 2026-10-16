@@ -13,9 +13,9 @@ from typing import Final
 
 from caseforge.common.hashing import canonical_json_bytes
 from caseforge.common.sqlite import SqliteDatabase
-from caseforge.governance.models import AuditEntry
+from caseforge.governance.models import AuditEntry, SwitchState
 
-SCHEMA_VERSION: Final = "governance.v1"
+SCHEMA_VERSION: Final = "governance.v2"
 _STATEMENTS: Final = (
     """CREATE TABLE IF NOT EXISTS audit_log (
         seq INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,6 +31,15 @@ _STATEMENTS: Final = (
     """CREATE TRIGGER IF NOT EXISTS audit_log_no_delete BEFORE DELETE ON audit_log
         BEGIN SELECT RAISE(ABORT, 'audit log is append-only'); END""",
 )
+_V2_STATEMENTS: Final = (
+    """CREATE TABLE IF NOT EXISTS switches (
+        name TEXT PRIMARY KEY,
+        engaged INTEGER NOT NULL,
+        actor TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        changed_at TEXT NOT NULL
+    )""",
+)
 
 
 class GovernanceError(RuntimeError):
@@ -43,8 +52,8 @@ class GovernanceStore:
             path,
             label="governance",
             schema_version=SCHEMA_VERSION,
-            base_statements=_STATEMENTS,
-            migrations={},
+            base_statements=(*_STATEMENTS, *_V2_STATEMENTS),
+            migrations={"governance.v1": ("governance.v2", _V2_STATEMENTS)},
             error=GovernanceError,
         )
 
@@ -96,4 +105,27 @@ class GovernanceStore:
                 detail=json.loads(detail),
             )
             for seq, at, actor, act, tgt, outcome, detail in rows
+        )
+
+    def set_switch(self, state: SwitchState) -> None:
+        data = state.model_dump(mode="json")
+        with self._db.transaction() as conn:
+            conn.execute(
+                "INSERT INTO switches (name, engaged, actor, reason, changed_at) "
+                "VALUES (?, ?, ?, ?, ?) ON CONFLICT(name) DO UPDATE SET "
+                "engaged = excluded.engaged, actor = excluded.actor, "
+                "reason = excluded.reason, changed_at = excluded.changed_at",
+                (state.name, int(state.engaged), state.actor, state.reason, data["changed_at"]),
+            )
+
+    def get_switch(self, name: str) -> SwitchState | None:
+        with self._db.reading() as conn:
+            row = conn.execute(
+                "SELECT name, engaged, actor, reason, changed_at FROM switches WHERE name = ?",
+                (name,),
+            ).fetchone()
+        if row is None:
+            return None
+        return SwitchState(
+            name=row[0], engaged=bool(row[1]), actor=row[2], reason=row[3], changed_at=row[4]
         )

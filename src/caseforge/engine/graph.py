@@ -23,7 +23,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send, interrupt
 
 from caseforge.agents.supervisor import Supervisor, SupervisorStatus
-from caseforge.agents.workers import Worker
+from caseforge.agents.workers import ToolInvoker, Worker
 from caseforge.engine.ports import ActionExecutor, CaseSource, OutcomeSource
 from caseforge.engine.triage import TriagePolicy
 from caseforge.events.envelope import EventEnvelope
@@ -38,11 +38,14 @@ from caseforge.persistence.records import (
     LedgerStatus,
 )
 from caseforge.tools.models import ToolCall, ToolContext
-from caseforge.tools.registry import ToolRegistry
 
 
 def no_fault(point: str) -> None:
     """Default fault hook: does nothing. Tests inject crashes at named points."""
+
+
+def no_guard(boundary: str) -> None:
+    """Default boundary guard: allows everything. The Control Plane supplies the real one."""
 
 
 def _accumulate(current: list[Any] | None, update: list[Any] | None) -> list[Any]:
@@ -91,7 +94,7 @@ class EngineDeps:
     case_source: CaseSource
     executor: ActionExecutor
     outcomes: OutcomeSource
-    tools: ToolRegistry
+    tools: ToolInvoker
     supervisor: Supervisor
     workers: Mapping[str, Worker]
     mode: Literal["deterministic", "hierarchical"]
@@ -99,6 +102,7 @@ class EngineDeps:
     clock: Callable[[], datetime]
     fault: Callable[[str], None] = no_fault
     approval_required: frozenset[str] = field(default_factory=frozenset)
+    guard: Callable[[str], None] = no_guard
 
 
 def _as_of(state: Mapping[str, Any]) -> datetime:
@@ -137,6 +141,7 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
     """Return the uncompiled case graph; the caller compiles it with a checkpointer."""
 
     def intake(state: CaseRunState) -> CaseRunState:
+        deps.guard("intake")
         accepted: list[EventEnvelope] = []
         rejected: list[Rejection] = []
         for event in deps.case_source.source_events(
@@ -161,6 +166,7 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         return {"intake": summary, "trace": [{"node": "intake", **summary}]}
 
     def triage(state: CaseRunState) -> CaseRunState:
+        deps.guard("triage")
         as_of = _as_of(state)
         events = deps.store.events_for_case(state["tenant_id"], state["case_id"])
         visible = sorted({e.event_type for e in events if e.recorded_at <= as_of})
@@ -186,6 +192,7 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         return update
 
     def supervisor_plan(state: CaseRunState) -> CaseRunState:
+        deps.guard("supervisor_plan")
         summary_call = deps.tools.invoke(
             ToolCall(tool="get_case"),
             ToolContext(
@@ -230,6 +237,7 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         return update
 
     def run_worker(task: WorkerTask) -> CaseRunState:
+        deps.guard("run_worker")
         result = deps.workers[task["worker"]].run(
             run_id=task["run_id"],
             tenant_id=task["tenant_id"],
@@ -263,6 +271,7 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         }
 
     def synthesize(state: CaseRunState) -> CaseRunState:
+        deps.guard("synthesize")
         round_index = state.get("synthesis_round", 0)
         result = deps.supervisor.synthesize(
             run_id=state["run_id"],
@@ -303,6 +312,7 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         return update
 
     def escalate(state: CaseRunState) -> CaseRunState:
+        deps.guard("escalate")
         reason = _escalation_reason(state)
         return {
             "decision": {
@@ -314,6 +324,7 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         }
 
     def approval_gate(state: CaseRunState) -> CaseRunState:
+        deps.guard("approval_gate")
         # Everything before interrupt() runs again on resume, so it only reads.
         proposed = state["decision"] or {}
         committed = deps.store.get_decision(state["run_id"])
@@ -348,6 +359,7 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         return {"approval": record.model_dump(mode="json"), "trace": [trace]}
 
     def act(state: CaseRunState) -> CaseRunState:
+        deps.guard("act")
         proposed = state["decision"] or {}
         now = deps.clock()
         committed = deps.store.save_decision(
@@ -426,6 +438,8 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
             # resending is safe because the external system ignores repeats.
             if entry.status != LedgerStatus.DISPATCHED:
                 deps.fault("act.before_dispatch")
+            deps.guard("act.dispatch")  # last check before anything leaves the system
+            if entry.status != LedgerStatus.DISPATCHED:
                 entry = deps.store.transition_action(key, LedgerStatus.DISPATCHED, at=now)
             deps.fault("act.after_dispatch")
             try:
@@ -481,6 +495,7 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         return observation.model_dump(mode="json")
 
     def observe(state: CaseRunState) -> CaseRunState:
+        deps.guard("observe")
         action = state["action"]
         outcome = outcome_of(state, action)
         event_types = list(state["triage"]["event_types"])

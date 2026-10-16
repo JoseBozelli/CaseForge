@@ -21,3 +21,15 @@ class AuditEntry(BaseModel):
     target: NonEmptyStr
     outcome: Literal["allowed", "denied", "recorded"]
     detail: dict[str, JsonValue] = Field(default_factory=dict)
+
+
+class SwitchState(BaseModel):
+    """Current position of a governance switch and who last changed it."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    name: NonEmptyStr
+    engaged: bool
+    actor: NonEmptyStr
+    reason: str
+    changed_at: UtcDatetime

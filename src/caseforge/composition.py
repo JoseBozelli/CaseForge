@@ -19,6 +19,7 @@ from caseforge.common.hashing import sha256_hex
 from caseforge.engine.graph import EngineDeps, build_case_graph, no_fault
 from caseforge.events.mapping import EventNormalizer
 from caseforge.governance.control_plane import ControlPlane
+from caseforge.governance.guards import EmergencyStopEngaged, GovernedReasoner, GovernedTools
 from caseforge.governance.permissions import APPROVE_ACTION
 from caseforge.governance.store import GovernanceStore
 from caseforge.knowledge.bm25 import Bm25KnowledgeProvider
@@ -103,7 +104,8 @@ class Container:
         self.environment.restore()
         self._governance_store = GovernanceStore(base / settings.governance.store_path)
         self.control_plane = ControlPlane(self._governance_store, settings.governance, clock=clock)
-        self.reasoner = reasoner or _default_reasoner(loaded, base)
+        self._governed_tools = GovernedTools(self.tools, self._guard)
+        self.reasoner = GovernedReasoner(reasoner or _default_reasoner(loaded, base), self._guard)
         reasoning, provenance, agents = settings.reasoning, settings.provenance, settings.agents
         self.caller = StructuredCaller(
             self.reasoner,
@@ -122,13 +124,13 @@ class Container:
         self.workers: dict[str, Worker] = {
             "evidence": evidence_worker(
                 caller=self.caller,
-                tools=self.tools,
+                tools=self._governed_tools,
                 template_version=agents.evidence.prompt_version,
                 max_steps=agents.evidence.max_steps,
             ),
             "policy": policy_worker(
                 caller=self.caller,
-                tools=self.tools,
+                tools=self._governed_tools,
                 template_version=agents.policy.prompt_version,
                 max_steps=agents.policy.max_steps,
             ),
@@ -143,7 +145,7 @@ class Container:
             case_source=self.environment,
             executor=self.environment,
             outcomes=self.environment,
-            tools=self.tools,
+            tools=self._governed_tools,
             supervisor=self.supervisor,
             workers=self.workers,
             mode=settings.engine.mode,
@@ -151,6 +153,7 @@ class Container:
             clock=clock,
             fault=fault_injector or no_fault,
             approval_required=settings.engine.approval_required,
+            guard=self._guard,
         )
         self.graph = build_case_graph(deps).compile(checkpointer=SqliteSaver(self._checkpoint_conn))
 
@@ -204,7 +207,7 @@ class Container:
             "tool_calls": None,
             "trace": [],
         }
-        return self.graph.invoke(state, {"configurable": {"thread_id": run_id}})
+        return self._invoke(state, run_id)
 
     def pending_approval(self, run_id: str) -> dict[str, Any] | None:
         """The approval request a run is paused on, or None."""
@@ -234,13 +237,29 @@ class Container:
             "note": note,
             "decided_at": self._clock().astimezone(UTC).isoformat(),
         }
-        final = self.graph.invoke(Command(resume=response), {"configurable": {"thread_id": run_id}})
-        self.control_plane.record(actor, f"approval.{decision}", target=run_id, detail=detail)
+        final = self._invoke(Command(resume=response), run_id)
+        if not final.get("halted"):
+            self.control_plane.record(actor, f"approval.{decision}", target=run_id, detail=detail)
         return final
+
+    def _guard(self, boundary: str) -> None:
+        self.control_plane.check(boundary)
+
+    def _invoke(self, payload: Any, run_id: str) -> dict[str, Any]:
+        """Run the graph; an emergency stop returns the saved state marked as halted."""
+        config = {"configurable": {"thread_id": run_id}}
+        try:
+            return self.graph.invoke(payload, config)
+        except EmergencyStopEngaged as stop:
+            self.control_plane.record(
+                "system", "run.halted", target=run_id, detail={"reason": str(stop)}
+            )
+            state = dict(self.graph.get_state(config).values)
+            return {**state, "halted": True, "halt_reason": str(stop)}
 
     def resume(self, run_id: str) -> dict[str, Any]:
         """Continue an interrupted run from its last checkpoint."""
-        return self.graph.invoke(None, {"configurable": {"thread_id": run_id}})
+        return self._invoke(None, run_id)
 
     def _record_manifest(self, run_id: str) -> None:
         existing = self.store.get_manifest(run_id)

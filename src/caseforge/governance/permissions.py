@@ -9,5 +9,6 @@ from __future__ import annotations
 from typing import Final
 
 APPROVE_ACTION: Final = "approve_action"
+EMERGENCY_STOP: Final = "emergency_stop"
 
-PERMISSIONS: Final = frozenset({APPROVE_ACTION})
+PERMISSIONS: Final = frozenset({APPROVE_ACTION, EMERGENCY_STOP})
