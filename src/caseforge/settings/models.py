@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 from caseforge.engine.triage import TriagePolicy
 from caseforge.events.envelope import NonEmptyStr, UtcDatetime
 from caseforge.events.vocabulary import Identifier, Name
+from caseforge.governance.permissions import PERMISSIONS
 from caseforge.tools.models import ToolPolicy
 
 RelativePath = Annotated[str, Field(min_length=1, pattern=r"^[^/\\:][^\\:]*$")]
@@ -106,6 +107,26 @@ class MemorySettings(_Section):
     min_score: float = Field(default=0.5, ge=0)
 
 
+class GovernanceSettings(_Section):
+    """Trusted governance policy. Roles may only grant permissions from the code catalog."""
+
+    store_path: RelativePath = "../data/governance.db"
+    roles: dict[Name, frozenset[Name]] = Field(min_length=1)
+    operators: dict[Identifier, frozenset[Name]] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _check_references(self) -> GovernanceSettings:
+        granted = {p for permissions in self.roles.values() for p in permissions}
+        unknown_permissions = sorted(granted - PERMISSIONS)
+        if unknown_permissions:
+            raise ValueError(f"roles grant unknown permissions {unknown_permissions}")
+        assigned = {r for roles in self.operators.values() for r in roles}
+        undefined_roles = sorted(assigned - self.roles.keys())
+        if undefined_roles:
+            raise ValueError(f"operators reference undefined roles {undefined_roles}")
+        return self
+
+
 class Settings(_Section):
     """Root settings document. Secrets never belong here."""
 
@@ -122,3 +143,4 @@ class Settings(_Section):
     reasoning: ReasoningSettings
     agents: AgentSettings
     engine: EngineSettings
+    governance: GovernanceSettings

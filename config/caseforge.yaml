@@ -63,3 +63,13 @@ memory:
   k1: 1.5
   b: 0.75
   min_score: 0.5
+governance:
+  store_path: ../data/governance.db
+  roles:
+    viewer: []
+    approver: [approve_action]
+    admin: [approve_action]
+  operators:
+    viewer-1: [viewer]
+    approver-1: [approver]
+    admin-1: [admin]

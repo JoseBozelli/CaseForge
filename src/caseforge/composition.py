@@ -18,6 +18,9 @@ from caseforge.agents.workers import Worker, evidence_worker, policy_worker
 from caseforge.common.hashing import sha256_hex
 from caseforge.engine.graph import EngineDeps, build_case_graph, no_fault
 from caseforge.events.mapping import EventNormalizer
+from caseforge.governance.control_plane import ControlPlane
+from caseforge.governance.permissions import APPROVE_ACTION
+from caseforge.governance.store import GovernanceStore
 from caseforge.knowledge.bm25 import Bm25KnowledgeProvider
 from caseforge.memory.store_provider import StoreEpisodeProvider
 from caseforge.persistence.ports import RecordConflictError
@@ -98,6 +101,8 @@ class Container:
         self._simulation_log = SqliteSimulationLog(base / settings.simulation.store_path)
         self.environment = SimulatedEnvironment(self.provider, self._simulation_log)
         self.environment.restore()
+        self._governance_store = GovernanceStore(base / settings.governance.store_path)
+        self.control_plane = ControlPlane(self._governance_store, settings.governance, clock=clock)
         self.reasoner = reasoner or _default_reasoner(loaded, base)
         reasoning, provenance, agents = settings.reasoning, settings.provenance, settings.agents
         self.caller = StructuredCaller(
@@ -158,6 +163,7 @@ class Container:
     def close(self) -> None:
         self._checkpoint_conn.close()
         self._simulation_log.close()
+        self._governance_store.close()
         self.store.close()
 
     def open_simulated_case(self, family_id: str, seed: int) -> SimulatedWorld:
@@ -217,15 +223,20 @@ class Container:
     def _answer_approval(
         self, run_id: str, decision: str, actor: str, note: str | None
     ) -> dict[str, Any]:
-        if self.pending_approval(run_id) is None:
+        request = self.pending_approval(run_id)
+        if request is None:
             raise ValueError(f"run {run_id!r} is not awaiting approval")
+        detail = {"action_type": request["action_type"], "decision": decision}
+        self.control_plane.require(actor, APPROVE_ACTION, target=run_id, detail=detail)
         response = {
             "decision": decision,
             "actor": actor,
             "note": note,
             "decided_at": self._clock().astimezone(UTC).isoformat(),
         }
-        return self.graph.invoke(Command(resume=response), {"configurable": {"thread_id": run_id}})
+        final = self.graph.invoke(Command(resume=response), {"configurable": {"thread_id": run_id}})
+        self.control_plane.record(actor, f"approval.{decision}", target=run_id, detail=detail)
+        return final
 
     def resume(self, run_id: str) -> dict[str, Any]:
         """Continue an interrupted run from its last checkpoint."""
