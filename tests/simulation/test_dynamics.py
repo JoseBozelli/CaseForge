@@ -15,6 +15,7 @@ START = datetime(2026, 1, 5, 9, 0, tzinfo=UTC)
 END = START + timedelta(days=30)
 ACT_AT = START + timedelta(hours=25)
 S1, S2 = "routine-stalled-task", "missing-document"
+ALL_FAMILIES = [family.family_id for family in load_families(FAMILIES_DIR)]
 
 
 @pytest.fixture(scope="module")
@@ -202,7 +203,7 @@ def test_family_without_dynamics_rejects_actions() -> None:
         world.apply_action("act-1", "fix", START + timedelta(hours=1))
 
 
-@pytest.mark.parametrize("family_id", [S1, S2])
+@pytest.mark.parametrize("family_id", ALL_FAMILIES)
 def test_post_action_events_normalize(
     provider, family_id, canonical_vocabulary, sim_mapping_path
 ) -> None:

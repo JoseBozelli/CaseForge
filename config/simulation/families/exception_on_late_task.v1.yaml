@@ -1,0 +1,85 @@
+# S4: a task is overdue and an exception was requested; facts and procedure both matter.
+family_id: exception-on-late-task
+spec_version: 1
+case_prefix: elt
+description: A task is overdue and a deadline exception was requested; both case facts and procedure matter.
+source_system: sim
+recording_delay_minutes: [0, 5]
+blockers:
+  extension_warranted:
+    description: The delay has a documented cause and the exception should be approved.
+    weight: 0.5
+    effective_actions: [grant_policy_exception]
+  owner_overloaded:
+    description: The owner is overloaded; the work must move to another owner.
+    weight: 0.5
+    effective_actions: [reassign_task]
+variables:
+  owner: {choice: [owner_a, owner_b, owner_c]}
+templates:
+  - id: open
+    source_type: case.open
+    actor: req
+    offset_minutes: [0, 0]
+    attributes: {cat: {choice: [access_request, equipment, scheduling]}}
+  - id: task_main_request
+    source_type: tsk.req
+    actor: ops
+    entity: t1
+    offset_minutes: [10, 60]
+    attributes: {owner: {var: owner}, due: {at_minutes: 1440}}
+  - id: task_side_request
+    source_type: tsk.req
+    actor: ops
+    entity: t2
+    offset_minutes: [10, 60]
+    attributes: {owner: {var: owner}, due: {at_minutes: 1440}}
+  - id: task_side_done
+    source_type: tsk.done
+    actor: ops
+    entity: t2
+    when_blocker: [extension_warranted]
+    probability: 0.9
+    offset_minutes: [120, 1380]
+  - id: task_main_late
+    source_type: tsk.late
+    actor: sys
+    entity: t1
+    offset_minutes: [1440, 1500]
+    attributes: {due: {at_minutes: 1440}}
+  - id: task_side_late
+    source_type: tsk.late
+    actor: sys
+    entity: t2
+    when_blocker: [owner_overloaded]
+    probability: 0.8
+    offset_minutes: [1440, 1500]
+    attributes: {due: {at_minutes: 1440}}
+  - id: supporting_statement
+    source_type: doc.in
+    actor: req
+    entity: d1
+    when_blocker: [extension_warranted]
+    probability: 0.7
+    offset_minutes: [1450, 1530]
+    attributes: {kind: supporting_statement, channel: upload}
+  - id: exception_flag
+    source_type: pol.flag
+    actor: ops
+    offset_minutes: [1500, 1540]
+    attributes: {policy: deadline_extension}
+dynamics:
+  horizon_minutes: 2880
+  unobservable_probability: 0.05
+  resolution_delay_minutes: [60, 1440]
+  resolution_events:
+    - id: task_main_done
+      source_type: tsk.done
+      actor: ops
+      entity: t1
+      offset_minutes: [0, 0]
+  actions:
+    grant_policy_exception: {extension_warranted: 0.8, owner_overloaded: 0.15}
+    reassign_task: {extension_warranted: 0.3, owner_overloaded: 0.8}
+    escalate_case: {extension_warranted: 0.4, owner_overloaded: 0.4}
+    send_reminder: {extension_warranted: 0.2, owner_overloaded: 0.2}

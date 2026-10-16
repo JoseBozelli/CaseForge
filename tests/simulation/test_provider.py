@@ -13,6 +13,7 @@ FAMILIES_DIR = Path(__file__).resolve().parents[2] / "config" / "simulation" / "
 START = datetime(2026, 1, 5, 9, 0, tzinfo=UTC)
 END = START + timedelta(days=30)
 S1, S2 = "routine-stalled-task", "missing-document"
+ALL_FAMILIES = [family.family_id for family in load_families(FAMILIES_DIR)]
 
 
 @pytest.fixture(scope="module")
@@ -137,7 +138,7 @@ def test_observable_view_exposes_no_ground_truth(provider) -> None:
         assert not hasattr(view, name)
 
 
-@pytest.mark.parametrize("family_id", [S1, S2])
+@pytest.mark.parametrize("family_id", ALL_FAMILIES)
 def test_all_observed_events_normalize(
     provider, family_id, canonical_vocabulary, sim_mapping_path
 ) -> None:

@@ -82,7 +82,13 @@ def _effective_not_listed(d):
 
 def test_shipped_families_load() -> None:
     families = load_families(FAMILIES_DIR)
-    assert [f.family_id for f in families] == ["missing-document", "routine-stalled-task"]
+    assert [f.family_id for f in families] == [
+        "conflicting-records",
+        "exception-on-late-task",
+        "missing-document",
+        "policy-question",
+        "routine-stalled-task",
+    ]
 
 
 def test_minimal_family_is_valid() -> None:

@@ -1,0 +1,57 @@
+# S3: a deadline exception was requested; the applicable procedure decides the next step.
+family_id: policy-question
+spec_version: 1
+case_prefix: pq
+description: A deadline exception was requested for an open task; the applicable procedure decides the next step.
+source_system: sim
+recording_delay_minutes: [0, 10]
+blockers:
+  exception_justified:
+    description: The exception is justified by the case facts and only needs approval.
+    weight: 0.6
+    effective_actions: [grant_policy_exception]
+  exception_unjustified:
+    description: The exception is not justified; a person must decide.
+    weight: 0.4
+    effective_actions: [escalate_case]
+variables:
+  owner: {choice: [owner_a, owner_b, owner_c]}
+templates:
+  - id: open
+    source_type: case.open
+    actor: req
+    offset_minutes: [0, 0]
+    attributes: {cat: {choice: [access_request, equipment, scheduling]}}
+  - id: task_request
+    source_type: tsk.req
+    actor: ops
+    entity: t1
+    offset_minutes: [10, 60]
+    attributes: {owner: {var: owner}, due: {at_minutes: 2880}}
+  - id: exception_flag
+    source_type: pol.flag
+    actor: ops
+    offset_minutes: [120, 600]
+    attributes: {policy: deadline_extension}
+  - id: supporting_statement
+    source_type: doc.in
+    actor: req
+    entity: d1
+    when_blocker: [exception_justified]
+    probability: 0.8
+    offset_minutes: [180, 900]
+    attributes: {kind: supporting_statement, channel: upload}
+dynamics:
+  horizon_minutes: 2880
+  unobservable_probability: 0.05
+  resolution_delay_minutes: [60, 720]
+  resolution_events:
+    - id: task_done
+      source_type: tsk.done
+      actor: ops
+      entity: t1
+      offset_minutes: [0, 0]
+  actions:
+    grant_policy_exception: {exception_justified: 0.85, exception_unjustified: 0.1}
+    escalate_case: {exception_justified: 0.4, exception_unjustified: 0.6}
+    send_reminder: {exception_justified: 0.2, exception_unjustified: 0.15}

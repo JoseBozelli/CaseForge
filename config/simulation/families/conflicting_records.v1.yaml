@@ -1,0 +1,51 @@
+# S5: two receipt records for the same document disagree; a person must reconcile them.
+family_id: conflicting-records
+spec_version: 1
+case_prefix: cr
+description: Two receipt records for the same requested document disagree about its type.
+source_system: sim
+recording_delay_minutes: [0, 10]
+blockers:
+  records_conflict:
+    description: The receipt records conflict and must be reconciled by a person.
+    weight: 1.0
+    effective_actions: [escalate_case]
+templates:
+  - id: open
+    source_type: case.open
+    actor: req
+    offset_minutes: [0, 0]
+    attributes: {cat: {choice: [account_change, service_activation, records_update]}}
+  - id: doc_request
+    source_type: doc.req
+    actor: ops
+    entity: d1
+    offset_minutes: [15, 120]
+    attributes: {kind: signed_form}
+  - id: doc_in_signed
+    source_type: doc.in
+    actor: req
+    entity: d1
+    offset_minutes: [300, 900]
+    attributes: {kind: signed_form, channel: upload}
+  - id: doc_in_draft
+    source_type: doc.in
+    actor: req
+    entity: d1
+    offset_minutes: [300, 900]
+    attributes: {kind: draft_form, channel: upload}
+dynamics:
+  horizon_minutes: 4320
+  unobservable_probability: 0.1
+  resolution_delay_minutes: [120, 2880]
+  resolution_events:
+    - id: doc_confirmed
+      source_type: doc.in
+      actor: ops
+      entity: d1
+      offset_minutes: [0, 0]
+      attributes: {kind: signed_form, channel: upload}
+  actions:
+    escalate_case: {records_conflict: 0.7}
+    request_document: {records_conflict: 0.3}
+    send_reminder: {records_conflict: 0.1}
