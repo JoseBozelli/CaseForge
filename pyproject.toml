@@ -21,7 +21,10 @@ packages = ["src/caseforge"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --strict-markers --import-mode=importlib"
-markers = ["live: requires a paid model API and network access"]
+markers = [
+    "live: requires a paid model API and network access",
+    "process: starts separate Python processes (slower)",
+]
 
 [tool.ruff]
 line-length = 100
