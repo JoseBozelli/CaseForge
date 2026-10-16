@@ -19,7 +19,7 @@ from caseforge.common.hashing import sha256_hex
 from caseforge.engine.graph import EngineDeps, build_case_graph, no_fault
 from caseforge.events.mapping import EventNormalizer
 from caseforge.knowledge.bm25 import Bm25KnowledgeProvider
-from caseforge.memory.empty import EmptyEpisodeProvider
+from caseforge.memory.store_provider import StoreEpisodeProvider
 from caseforge.persistence.ports import RecordConflictError
 from caseforge.persistence.sqlite import SqliteRecordStore
 from caseforge.provenance.manifest import build_run_manifest
@@ -75,7 +75,16 @@ class Container:
                 min_score=settings.knowledge.min_score,
             )
             self.tools = ToolRegistry(
-                read_tools(self.store, knowledge, EmptyEpisodeProvider()),
+                read_tools(
+                    self.store,
+                    knowledge,
+                    StoreEpisodeProvider(
+                        self.store,
+                        k1=settings.memory.k1,
+                        b=settings.memory.b,
+                        min_score=settings.memory.min_score,
+                    ),
+                ),
                 settings.tools,
                 clock=clock,
             )

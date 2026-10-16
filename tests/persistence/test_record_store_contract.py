@@ -13,6 +13,7 @@ from caseforge.persistence.records import (
     ActionLedgerEntry,
     ApprovalRecord,
     DecisionRecord,
+    EpisodeRecord,
     LedgerStatus,
 )
 from caseforge.persistence.sqlite import SqliteRecordStore
@@ -313,3 +314,29 @@ def test_approvals_are_append_only(store) -> None:
     assert store.save_approval(rejected) is True
     assert store.approvals_for_run("run-0001") == (approved, rejected)
     assert store.approvals_for_run("run-9999") == ()
+
+
+def _episode(run_id: str, case_id: str, tenant_id: str = "tenant-a", outcome: str = "pending"):
+    return EpisodeRecord(
+        run_id=run_id,
+        tenant_id=tenant_id,
+        case_id=case_id,
+        event_types=("task.delayed",),
+        decision_source="triage",
+        action_type="send_reminder",
+        ledger_status="succeeded",
+        outcome_status=outcome,
+        summary="Case events: task.delayed. Decision by triage: send_reminder.",
+        recorded_at=BASE,
+    )
+
+
+def test_episodes_are_replaced_per_run_and_scoped_by_tenant(store) -> None:
+    store.save_episode(_episode("run-1", "case-1"))
+    store.save_episode(_episode("run-2", "case-2"))
+    store.save_episode(_episode("run-3", "case-3", tenant_id="tenant-b"))
+    updated = _episode("run-1", "case-1", outcome="success")
+    store.save_episode(updated)
+    episodes = store.episodes_for_tenant("tenant-a")
+    assert [e.run_id for e in episodes] == ["run-1", "run-2"]
+    assert episodes[0] == updated

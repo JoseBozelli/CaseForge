@@ -22,6 +22,7 @@ from caseforge.persistence.records import (
     ApprovalRecord,
     DecisionRecord,
     DecisionSave,
+    EpisodeRecord,
     LedgerStatus,
     transition,
 )
@@ -61,6 +62,7 @@ class InMemoryRecordStore:
         self._ledger: dict[str, ActionLedgerEntry] = {}
         self._approvals: list[ApprovalRecord] = []
         self._approval_keys: set[tuple[str, str]] = set()
+        self._episodes: dict[str, EpisodeRecord] = {}
 
     def __enter__(self) -> InMemoryRecordStore:
         return self
@@ -177,3 +179,9 @@ class InMemoryRecordStore:
 
     def approvals_for_run(self, run_id: str) -> tuple[ApprovalRecord, ...]:
         return tuple(r for r in self._approvals if r.run_id == run_id)
+
+    def save_episode(self, record: EpisodeRecord) -> None:
+        self._episodes[record.run_id] = record
+
+    def episodes_for_tenant(self, tenant_id: str) -> tuple[EpisodeRecord, ...]:
+        return tuple(e for e in self._episodes.values() if e.tenant_id == tenant_id)

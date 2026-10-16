@@ -98,6 +98,14 @@ class EngineSettings(_Section):
     approval_required: frozenset[Name] = frozenset()
 
 
+class MemorySettings(_Section):
+    """BM25 parameters for episode search; small casebooks need a lower min_score."""
+
+    k1: float = Field(default=1.5, gt=0)
+    b: float = Field(default=0.75, ge=0, le=1)
+    min_score: float = Field(default=0.5, ge=0)
+
+
 class Settings(_Section):
     """Root settings document. Secrets never belong here."""
 
@@ -110,6 +118,7 @@ class Settings(_Section):
     triage: TriagePolicy
     tools: dict[Name, ToolPolicy] = Field(default_factory=dict)
     knowledge: KnowledgeSettings
+    memory: MemorySettings = Field(default_factory=MemorySettings)
     reasoning: ReasoningSettings
     agents: AgentSettings
     engine: EngineSettings

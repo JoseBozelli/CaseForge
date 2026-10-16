@@ -8,7 +8,7 @@ import pytest
 
 from caseforge.persistence.ports import RecordStoreError
 from caseforge.persistence.records import ActionLedgerEntry, LedgerStatus
-from caseforge.persistence.sqlite import SqliteRecordStore
+from caseforge.persistence.sqlite import SCHEMA_VERSION, SqliteRecordStore
 
 T0 = datetime(2026, 1, 5, 9, 0, tzinfo=UTC)
 
@@ -48,13 +48,16 @@ def test_parent_directories_created(tmp_path: Path) -> None:
     assert path.exists()
 
 
-def test_v1_database_is_migrated_to_v2(tmp_path: Path, make_event) -> None:
+def test_v1_database_is_migrated_to_current_schema(tmp_path: Path, make_event) -> None:
     path = tmp_path / "records.db"
     with SqliteRecordStore(path) as store:
         store.append_events([make_event()])
+    v1_tables = {"schema_info", "run_manifests", "events", "rejections", "sqlite_sequence"}
     conn = sqlite3.connect(path)
-    for table in ("llm_calls", "tool_invocations", "decisions", "action_ledger", "approvals"):
-        conn.execute(f"DROP TABLE {table}")
+    tables = [row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")]
+    for table in tables:
+        if table not in v1_tables:
+            conn.execute(f"DROP TABLE {table}")
     conn.execute("UPDATE schema_info SET value = 'records.v1' WHERE key = 'schema'")
     conn.commit()
     conn.close()
@@ -62,11 +65,12 @@ def test_v1_database_is_migrated_to_v2(tmp_path: Path, make_event) -> None:
     with SqliteRecordStore(path) as store:
         assert store.events_for_case("tenant-a", "case-0001") == (make_event(),)
         assert store.get_action("missing") is None
+        assert store.episodes_for_tenant("tenant-a") == ()
 
     conn = sqlite3.connect(path)
     version = conn.execute("SELECT value FROM schema_info WHERE key = 'schema'").fetchone()[0]
     conn.close()
-    assert version == "records.v3"
+    assert version == SCHEMA_VERSION
 
 
 def test_ledger_state_survives_reopen(tmp_path: Path) -> None:

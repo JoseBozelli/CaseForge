@@ -17,6 +17,7 @@ from caseforge.persistence.records import (
     ApprovalRecord,
     DecisionRecord,
     DecisionSave,
+    EpisodeRecord,
     LedgerStatus,
 )
 from caseforge.provenance.manifest import RunManifest
@@ -83,5 +84,9 @@ class RecordStore(Protocol):
     def save_approval(self, record: ApprovalRecord) -> bool: ...
 
     def approvals_for_run(self, run_id: str) -> tuple[ApprovalRecord, ...]: ...
+
+    def save_episode(self, record: EpisodeRecord) -> None: ...
+
+    def episodes_for_tenant(self, tenant_id: str) -> tuple[EpisodeRecord, ...]: ...
 
     def close(self) -> None: ...

@@ -118,3 +118,18 @@ class ApprovalRecord(_Frozen):
     actor: NonEmptyStr
     note: str | None = Field(default=None, max_length=500)
     decided_at: UtcDatetime
+
+
+class EpisodeRecord(_Frozen):
+    """Plain-language memory of one completed run; a re-run replaces it."""
+
+    run_id: NonEmptyStr
+    tenant_id: NonEmptyStr
+    case_id: NonEmptyStr
+    event_types: tuple[str, ...]
+    decision_source: NonEmptyStr
+    action_type: Name
+    ledger_status: NonEmptyStr
+    outcome_status: NonEmptyStr
+    summary: NonEmptyStr
+    recorded_at: UtcDatetime

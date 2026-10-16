@@ -28,11 +28,13 @@ from caseforge.engine.ports import ActionExecutor, CaseSource, OutcomeSource
 from caseforge.engine.triage import TriagePolicy
 from caseforge.events.envelope import EventEnvelope
 from caseforge.events.mapping import EventNormalizer, Rejection
+from caseforge.memory.episodes import describe_episode
 from caseforge.persistence.ports import RecordStore
 from caseforge.persistence.records import (
     ActionLedgerEntry,
     ApprovalRecord,
     DecisionRecord,
+    EpisodeRecord,
     LedgerStatus,
 )
 from caseforge.tools.models import ToolCall, ToolContext
@@ -463,15 +465,10 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         }
         return {"action": record, "trace": [trace]}
 
-    def observe(state: CaseRunState) -> CaseRunState:
-        action = state["action"]
+    def outcome_of(state: CaseRunState, action: dict[str, Any]) -> dict[str, Any]:
+        unavailable = {"action_id": action["action_id"], "status": "unavailable"}
         if action["ledger_status"] != LedgerStatus.SUCCEEDED:
-            outcome = {
-                "action_id": action["action_id"],
-                "status": "unavailable",
-                "reason": f"action {action['ledger_status']}",
-            }
-            return {"outcome": outcome, "trace": [{"node": "observe", "status": "unavailable"}]}
+            return {**unavailable, "reason": f"action {action['ledger_status']}"}
         try:
             observation = deps.outcomes.observe(
                 tenant_id=state["tenant_id"],
@@ -480,14 +477,36 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
                 as_of=_as_of(state),
             )
         except Exception as exc:  # an outcome source failure never fails the run
-            outcome = {
-                "action_id": action["action_id"],
-                "status": "unavailable",
-                "reason": f"outcome source error ({type(exc).__name__})",
-            }
-            return {"outcome": outcome, "trace": [{"node": "observe", "status": "unavailable"}]}
-        trace = {"node": "observe", "status": str(observation.status)}
-        return {"outcome": observation.model_dump(mode="json"), "trace": [trace]}
+            return {**unavailable, "reason": f"outcome source error ({type(exc).__name__})"}
+        return observation.model_dump(mode="json")
+
+    def observe(state: CaseRunState) -> CaseRunState:
+        action = state["action"]
+        outcome = outcome_of(state, action)
+        event_types = list(state["triage"]["event_types"])
+        decision = deps.store.get_decision(state["run_id"])
+        deps.store.save_episode(
+            EpisodeRecord(
+                run_id=state["run_id"],
+                tenant_id=state["tenant_id"],
+                case_id=state["case_id"],
+                event_types=tuple(event_types),
+                decision_source=action["source"],
+                action_type=action["action_type"],
+                ledger_status=action["ledger_status"],
+                outcome_status=outcome["status"],
+                summary=describe_episode(
+                    event_types=event_types,
+                    source=action["source"],
+                    action_type=action["action_type"],
+                    reason=decision.reason if decision else None,
+                    ledger_status=action["ledger_status"],
+                    outcome_status=outcome["status"],
+                ),
+                recorded_at=deps.clock(),
+            )
+        )
+        return {"outcome": outcome, "trace": [{"node": "observe", "status": outcome["status"]}]}
 
     def to_execution(state: CaseRunState) -> str:
         action_type = (state.get("decision") or {}).get("action_type")

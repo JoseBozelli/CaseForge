@@ -35,6 +35,7 @@ from caseforge.persistence.records import (
     ApprovalRecord,
     DecisionRecord,
     DecisionSave,
+    EpisodeRecord,
     LedgerStatus,
     transition,
 )
@@ -42,7 +43,7 @@ from caseforge.provenance.manifest import RunManifest
 from caseforge.reasoning.models import LlmCallRecord
 from caseforge.tools.models import ToolInvocationRecord
 
-SCHEMA_VERSION: Final = "records.v3"
+SCHEMA_VERSION: Final = "records.v4"
 R = TypeVar("R", bound=BaseModel)
 
 _V1_STATEMENTS: Final = (
@@ -114,9 +115,20 @@ _V3_STATEMENTS: Final = (
         UNIQUE (run_id, sha256)
     )""",
 )
+_V4_STATEMENTS: Final = (
+    """CREATE TABLE IF NOT EXISTS episodes (
+        seq INTEGER PRIMARY KEY AUTOINCREMENT,
+        run_id TEXT NOT NULL UNIQUE,
+        tenant_id TEXT NOT NULL,
+        case_id TEXT NOT NULL,
+        payload TEXT NOT NULL
+    )""",
+    "CREATE INDEX IF NOT EXISTS episodes_by_tenant ON episodes (tenant_id, seq)",
+)
 _MIGRATIONS: Final = {
     "records.v1": ("records.v2", _V2_STATEMENTS),
     "records.v2": ("records.v3", _V3_STATEMENTS),
+    "records.v3": ("records.v4", _V4_STATEMENTS),
 }
 
 
@@ -133,7 +145,7 @@ class SqliteRecordStore:
             path,
             label="records",
             schema_version=SCHEMA_VERSION,
-            base_statements=(*_V1_STATEMENTS, *_V2_STATEMENTS, *_V3_STATEMENTS),
+            base_statements=(*_V1_STATEMENTS, *_V2_STATEMENTS, *_V3_STATEMENTS, *_V4_STATEMENTS),
             migrations=_MIGRATIONS,
             error=RecordStoreError,
         )
@@ -372,3 +384,23 @@ class SqliteRecordStore:
 
     def approvals_for_run(self, run_id: str) -> tuple[ApprovalRecord, ...]:
         return self._list("approvals", run_id, ApprovalRecord)
+
+    # episodes (one per run; a re-run replaces it)
+
+    def save_episode(self, record: EpisodeRecord) -> None:
+        payload, _ = encode_model(record)
+        with self._db.transaction() as conn:
+            conn.execute(
+                "INSERT INTO episodes (run_id, tenant_id, case_id, payload) VALUES (?, ?, ?, ?) "
+                "ON CONFLICT(run_id) DO UPDATE SET "
+                "tenant_id = excluded.tenant_id, case_id = excluded.case_id, "
+                "payload = excluded.payload",
+                (record.run_id, record.tenant_id, record.case_id, payload),
+            )
+
+    def episodes_for_tenant(self, tenant_id: str) -> tuple[EpisodeRecord, ...]:
+        with self._db.reading() as conn:
+            rows = conn.execute(
+                "SELECT payload FROM episodes WHERE tenant_id = ? ORDER BY seq", (tenant_id,)
+            ).fetchall()
+        return tuple(EpisodeRecord.model_validate_json(row[0]) for row in rows)

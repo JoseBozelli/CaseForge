@@ -59,4 +59,7 @@ engine:
   mode: hierarchical        # deterministic (rules only) | hierarchical (rule fast path, then agents)
   escalation_action: escalate_case
   approval_required: [grant_policy_exception]
-  
+memory:
+  k1: 1.5
+  b: 0.75
+  min_score: 0.5
