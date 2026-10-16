@@ -8,10 +8,10 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
 from caseforge.engine.triage import TriagePolicy
-from caseforge.events.envelope import UtcDatetime
+from caseforge.events.envelope import NonEmptyStr, UtcDatetime
 from caseforge.events.vocabulary import Identifier, Name
 from caseforge.tools.models import ToolPolicy
 
@@ -34,6 +34,41 @@ class VocabularySettings(_Section):
 
 class ProvenanceSettings(_Section):
     snapshot_mode: Literal["full", "redacted", "off"] = "redacted"
+    snapshot_dir: RelativePath = "../data/snapshots"
+
+
+class ReasoningSettings(_Section):
+    """fake: scripted outputs injected by tests; replay: responses from a recorded cassette."""
+
+    provider: Literal["fake", "replay"]
+    model: NonEmptyStr
+    params: dict[str, JsonValue] = Field(default_factory=dict)
+    prompts_dir: RelativePath
+    cassette_path: RelativePath | None = None
+
+    @model_validator(mode="after")
+    def _replay_needs_cassette(self) -> ReasoningSettings:
+        if self.provider == "replay" and self.cassette_path is None:
+            raise ValueError("the replay provider requires cassette_path")
+        return self
+
+
+class SupervisorSettings(_Section):
+    plan_version: int = Field(ge=1)
+    synthesis_version: int = Field(ge=1)
+    max_clarification_rounds: int = Field(default=1, ge=0, le=3)
+    allowed_actions: frozenset[Name] = Field(min_length=1)
+
+
+class WorkerSettings(_Section):
+    prompt_version: int = Field(ge=1)
+    max_steps: int = Field(ge=1, le=10)
+
+
+class AgentSettings(_Section):
+    supervisor: SupervisorSettings
+    evidence: WorkerSettings
+    policy: WorkerSettings
 
 
 class StorageSettings(_Section):
@@ -66,3 +101,5 @@ class Settings(_Section):
     triage: TriagePolicy
     tools: dict[Name, ToolPolicy] = Field(default_factory=dict)
     knowledge: KnowledgeSettings
+    reasoning: ReasoningSettings
+    agents: AgentSettings

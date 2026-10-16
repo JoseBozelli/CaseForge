@@ -11,6 +11,9 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
 from caseforge.events.envelope import NonEmptyStr
+from caseforge.events.vocabulary import Name
+
+WorkerName = Literal["evidence", "policy"]
 
 
 class _Strict(BaseModel):
@@ -71,3 +74,63 @@ class EvidenceStep(_Step):
 
 class PolicyStep(_Step):
     findings: PolicyFindings | None = None
+
+
+class SupervisorPlan(_Strict):
+    """Which workers a case needs, with one focused question per selected worker."""
+
+    objective: str = Field(min_length=1, max_length=500)
+    workers: tuple[WorkerName, ...] = ()
+    evidence_question: str | None = Field(default=None, min_length=1, max_length=500)
+    policy_question: str | None = Field(default=None, min_length=1, max_length=500)
+    rationale: str = Field(min_length=1, max_length=300)
+
+    @model_validator(mode="after")
+    def _consistent(self) -> SupervisorPlan:
+        if len(set(self.workers)) != len(self.workers):
+            raise ValueError("workers must be unique")
+        for worker in ("evidence", "policy"):
+            question = getattr(self, f"{worker}_question")
+            if (worker in self.workers) != (question is not None):
+                raise ValueError(
+                    f"{worker}_question must be given exactly when {worker} is selected"
+                )
+        return self
+
+    def question_for(self, worker: str) -> str | None:
+        return getattr(self, f"{worker}_question", None)
+
+
+class ActionProposal(_Strict):
+    action_type: Name
+    evidence_refs: tuple[NonEmptyStr, ...] = ()
+
+
+class Clarification(_Strict):
+    worker: WorkerName
+    question: str = Field(min_length=1, max_length=500)
+
+
+class Synthesis(_Strict):
+    """Exactly one decision: propose an action, escalate, or ask one worker to clarify."""
+
+    decision: Literal["propose_action", "escalate", "clarify"]
+    rationale: str = Field(min_length=1, max_length=300)
+    candidate_actions: tuple[Name, ...] = ()
+    proposal: ActionProposal | None = None
+    escalation_reason: str | None = Field(default=None, min_length=1, max_length=500)
+    clarification: Clarification | None = None
+
+    @model_validator(mode="after")
+    def _consistent(self) -> Synthesis:
+        payloads = {
+            "propose_action": self.proposal,
+            "escalate": self.escalation_reason,
+            "clarify": self.clarification,
+        }
+        for decision, payload in payloads.items():
+            if (decision == self.decision) != (payload is not None):
+                raise ValueError(f"{decision} must carry exactly its own payload")
+        if self.proposal and self.proposal.action_type not in self.candidate_actions:
+            raise ValueError("the proposed action must be among candidate_actions")
+        return self

@@ -17,6 +17,7 @@ from caseforge.common.yaml_io import load_yaml_mapping, parse_yaml_value
 from caseforge.events.mapping import MappingSpec, load_mapping
 from caseforge.events.vocabulary import CanonicalVocabulary, load_vocabulary
 from caseforge.knowledge.corpus import Corpus, load_corpus
+from caseforge.reasoning.prompts import PromptRegistry, load_prompt
 from caseforge.settings.models import Settings
 from caseforge.simulation.spec import ScenarioFamily, load_families
 
@@ -37,6 +38,8 @@ class LoadedSettings:
     families: tuple[ScenarioFamily, ...]
     family_paths: tuple[Path, ...]
     corpus: Corpus
+    prompts: PromptRegistry
+    prompt_paths: tuple[Path, ...]
 
     @property
     def config_files(self) -> tuple[Path, ...]:
@@ -46,6 +49,7 @@ class LoadedSettings:
             *self.mapping_paths,
             *self.family_paths,
             *self.corpus.paths,
+            *self.prompt_paths,
         )
 
 
@@ -104,6 +108,29 @@ def load_settings(path: str | Path, environ: Mapping[str, str] | None = None) ->
     if unknown:
         raise ConfigError(f"triage rules reference unknown event types {unknown}")
 
+    prompts_dir = (base / settings.reasoning.prompts_dir).resolve()
+    prompt_paths = tuple(sorted(prompts_dir.glob("*.md")))
+    prompts = PromptRegistry(load_prompt(path) for path in prompt_paths)
+    agents = settings.agents
+    required_prompts = (
+        ("supervisor_plan", agents.supervisor.plan_version),
+        ("supervisor_synthesis", agents.supervisor.synthesis_version),
+        ("evidence", agents.evidence.prompt_version),
+        ("policy", agents.policy.prompt_version),
+    )
+    for template_id, version in required_prompts:
+        try:
+            prompts.get(template_id, version)
+        except KeyError as exc:
+            raise ConfigError(
+                f"missing prompt template {template_id} v{version} in {prompts_dir}"
+            ) from exc
+
+    triage_actions = {settings.triage.default_action, *(r.action for r in settings.triage.rules)}
+    not_allowed = sorted(triage_actions - agents.supervisor.allowed_actions)
+    if not_allowed:
+        raise ConfigError(f"triage actions not in agents.supervisor.allowed_actions {not_allowed}")
+
     families_dir = (base / settings.simulation.families_dir).resolve()
     families = load_families(families_dir)
     family_paths = tuple(sorted(families_dir.glob("*.yaml")))
@@ -119,4 +146,6 @@ def load_settings(path: str | Path, environ: Mapping[str, str] | None = None) ->
         families=families,
         family_paths=family_paths,
         corpus=load_corpus((base / settings.knowledge.corpus_dir).resolve()),
+        prompts=prompts,
+        prompt_paths=prompt_paths,
     )

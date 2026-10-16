@@ -11,6 +11,8 @@ from typing import Any
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 from caseforge.adapters.simulation import SimulatedEnvironment
+from caseforge.agents.supervisor import Supervisor
+from caseforge.agents.workers import Worker, evidence_worker, policy_worker
 from caseforge.common.hashing import sha256_hex
 from caseforge.engine.graph import EngineDeps, build_case_graph
 from caseforge.events.mapping import EventNormalizer
@@ -19,6 +21,11 @@ from caseforge.memory.empty import EmptyEpisodeProvider
 from caseforge.persistence.ports import RecordConflictError
 from caseforge.persistence.sqlite import SqliteRecordStore
 from caseforge.provenance.manifest import build_run_manifest
+from caseforge.reasoning.fake import FakeReasoner
+from caseforge.reasoning.models import ModelSpec
+from caseforge.reasoning.ports import Reasoner
+from caseforge.reasoning.replay import Cassette, ReplayReasoner
+from caseforge.reasoning.structured import SnapshotWriter, StructuredCaller
 from caseforge.settings.loader import LoadedSettings, load_settings
 from caseforge.simulation.provider import TemplateSimulationProvider
 from caseforge.simulation.world import SimulatedWorld
@@ -32,10 +39,25 @@ def _system_clock() -> datetime:
     return datetime.now(UTC)
 
 
+def _default_reasoner(loaded: LoadedSettings, base: Path) -> Reasoner:
+    """fake without an injected script: every call fails gracefully (no hidden model)."""
+    reasoning = loaded.settings.reasoning
+    if reasoning.provider == "replay" and reasoning.cassette_path is not None:
+        return ReplayReasoner(Cassette(base / reasoning.cassette_path))
+    return FakeReasoner({})
+
+
 class Container:
     """Wired application objects for one process. Close it to release storage handles."""
 
-    def __init__(self, loaded: LoadedSettings, *, project_root: Path, clock: Clock) -> None:
+    def __init__(
+        self,
+        loaded: LoadedSettings,
+        *,
+        project_root: Path,
+        clock: Clock,
+        reasoner: Reasoner | None = None,
+    ) -> None:
         settings = loaded.settings
         base = loaded.settings_path.parent
         self.loaded = loaded
@@ -61,6 +83,36 @@ class Container:
             self.store.close()
             raise
         self.environment = SimulatedEnvironment()
+        self.reasoner = reasoner or _default_reasoner(loaded, base)
+        reasoning, provenance, agents = settings.reasoning, settings.provenance, settings.agents
+        self.caller = StructuredCaller(
+            self.reasoner,
+            loaded.prompts,
+            ModelSpec(provider=reasoning.provider, model=reasoning.model, params=reasoning.params),
+            clock=clock,
+            snapshots=SnapshotWriter(base / provenance.snapshot_dir, provenance.snapshot_mode),
+        )
+        self.supervisor = Supervisor(
+            caller=self.caller,
+            plan_version=agents.supervisor.plan_version,
+            synthesis_version=agents.supervisor.synthesis_version,
+            allowed_actions=agents.supervisor.allowed_actions,
+            max_clarification_rounds=agents.supervisor.max_clarification_rounds,
+        )
+        self.workers: dict[str, Worker] = {
+            "evidence": evidence_worker(
+                caller=self.caller,
+                tools=self.tools,
+                template_version=agents.evidence.prompt_version,
+                max_steps=agents.evidence.max_steps,
+            ),
+            "policy": policy_worker(
+                caller=self.caller,
+                tools=self.tools,
+                template_version=agents.policy.prompt_version,
+                max_steps=agents.policy.max_steps,
+            ),
+        }
         self.provider = TemplateSimulationProvider(loaded.families)
         deps = EngineDeps(
             store=self.store,
@@ -142,7 +194,8 @@ def build_container(
     environ: dict[str, str] | None = None,
     project_root: str | Path | None = None,
     clock: Clock = _system_clock,
+    reasoner: Reasoner | None = None,
 ) -> Container:
     loaded = load_settings(settings_path, environ=environ)
     root = Path(project_root) if project_root else loaded.settings_path.parent.parent
-    return Container(loaded, project_root=root, clock=clock)
+    return Container(loaded, project_root=root, clock=clock, reasoner=reasoner)

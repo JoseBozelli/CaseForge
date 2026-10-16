@@ -11,6 +11,7 @@ vocabulary:
     - vocabulary/mappings/sim.v1.yaml
 provenance:
   snapshot_mode: redacted   # full | redacted | off
+  snapshot_dir: ../data/snapshots
 storage:
   records_path: ../data/records.db
   checkpoints_path: ../data/checkpoints.db
@@ -39,4 +40,17 @@ knowledge:
   k1: 1.5
   b: 0.75
   min_score: 1.0
-  
+reasoning:
+  provider: fake            # fake (scripted, injected by tests) | replay (recorded cassette)
+  model: fake-model
+  params: {temperature: 0}
+  prompts_dir: prompts
+  cassette_path: ../data/cassettes/default.jsonl
+agents:
+  supervisor:
+    plan_version: 1
+    synthesis_version: 1
+    max_clarification_rounds: 1
+    allowed_actions: [send_reminder, request_document, reassign_task, escalate_case, grant_policy_exception]
+  evidence: {prompt_version: 1, max_steps: 4}
+  policy: {prompt_version: 1, max_steps: 3}
