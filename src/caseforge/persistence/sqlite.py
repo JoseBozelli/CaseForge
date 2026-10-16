@@ -1,19 +1,21 @@
 """SQLite RecordStore: durable, transactional, single-file storage.
 
 Writes run inside BEGIN IMMEDIATE transactions; the database uses WAL journaling.
-Records are stored as canonical JSON plus indexed key columns. The schema version
-is checked on open; unsupported versions are refused rather than migrated.
+Records are stored as canonical JSON plus indexed key columns. Older schema versions
+are upgraded by a forward-only migration chain; unknown versions are refused.
 """
 
 from __future__ import annotations
 
 import sqlite3
 import threading
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Final
+from typing import Any, Final, TypeVar
+
+from pydantic import BaseModel
 
 from caseforge.events.envelope import EventEnvelope
 from caseforge.events.mapping import Rejection
@@ -21,15 +23,33 @@ from caseforge.persistence.codec import (
     decode_event,
     decode_rejection,
     encode_event,
+    encode_model,
     encode_rejection,
 )
-from caseforge.persistence.ports import IntakeResult, RecordConflictError, RecordStoreError
+from caseforge.persistence.errors import (
+    LedgerTransitionError,
+    RecordConflictError,
+    RecordStoreError,
+)
+from caseforge.persistence.ports import IntakeResult
+from caseforge.persistence.records import (
+    ActionLedgerEntry,
+    DecisionRecord,
+    DecisionSave,
+    LedgerStatus,
+    transition,
+)
 from caseforge.provenance.manifest import RunManifest
+from caseforge.reasoning.models import LlmCallRecord
+from caseforge.tools.models import ToolInvocationRecord
 
-SCHEMA_VERSION: Final = "records.v1"
+SCHEMA_VERSION: Final = "records.v2"
+R = TypeVar("R", bound=BaseModel)
 
-_SCHEMA_STATEMENTS: Final = (
-    "CREATE TABLE IF NOT EXISTS schema_info (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
+_SCHEMA_INFO: Final = (
+    "CREATE TABLE IF NOT EXISTS schema_info (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+)
+_V1_STATEMENTS: Final = (
     """CREATE TABLE IF NOT EXISTS run_manifests (
         run_id TEXT PRIMARY KEY,
         sha256 TEXT NOT NULL,
@@ -58,6 +78,39 @@ _SCHEMA_STATEMENTS: Final = (
         UNIQUE (source_system, source_event_id, mapping_id, mapping_version, raw_sha256)
     )""",
 )
+_V2_STATEMENTS: Final = (
+    """CREATE TABLE IF NOT EXISTS llm_calls (
+        seq INTEGER PRIMARY KEY AUTOINCREMENT,
+        run_id TEXT NOT NULL,
+        call_id TEXT NOT NULL,
+        sha256 TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        UNIQUE (call_id, sha256)
+    )""",
+    "CREATE INDEX IF NOT EXISTS llm_calls_by_run ON llm_calls (run_id, seq)",
+    """CREATE TABLE IF NOT EXISTS tool_invocations (
+        seq INTEGER PRIMARY KEY AUTOINCREMENT,
+        run_id TEXT NOT NULL,
+        invocation_id TEXT NOT NULL,
+        sha256 TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        UNIQUE (invocation_id, sha256)
+    )""",
+    "CREATE INDEX IF NOT EXISTS tool_invocations_by_run ON tool_invocations (run_id, seq)",
+    """CREATE TABLE IF NOT EXISTS decisions (
+        run_id TEXT PRIMARY KEY,
+        material_sha256 TEXT NOT NULL,
+        payload TEXT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS action_ledger (
+        idempotency_key TEXT PRIMARY KEY,
+        run_id TEXT NOT NULL,
+        status TEXT NOT NULL,
+        payload TEXT NOT NULL
+    )""",
+)
+# from-version -> (to-version, statements); applied in order until SCHEMA_VERSION
+_MIGRATIONS: Final = {"records.v1": ("records.v2", _V2_STATEMENTS)}
 
 
 def _time_key(moment: datetime) -> str:
@@ -103,17 +156,28 @@ class SqliteRecordStore:
 
     def _initialize(self) -> None:
         with self._transaction() as conn:
-            for statement in _SCHEMA_STATEMENTS:
-                conn.execute(statement)
+            conn.execute(_SCHEMA_INFO)
             row = conn.execute("SELECT value FROM schema_info WHERE key = 'schema'").fetchone()
             if row is None:
+                for statement in (*_V1_STATEMENTS, *_V2_STATEMENTS):
+                    conn.execute(statement)
                 conn.execute(
                     "INSERT INTO schema_info (key, value) VALUES ('schema', ?)", (SCHEMA_VERSION,)
                 )
-            elif row[0] != SCHEMA_VERSION:
-                raise RecordStoreError(
-                    f"unsupported records schema {row[0]!r}; expected {SCHEMA_VERSION!r}"
-                )
+                return
+            version = row[0]
+            while version != SCHEMA_VERSION:
+                step = _MIGRATIONS.get(version)
+                if step is None:
+                    raise RecordStoreError(
+                        f"unsupported records schema {version!r}; expected {SCHEMA_VERSION!r}"
+                    )
+                version, statements = step
+                for statement in statements:
+                    conn.execute(statement)
+            conn.execute("UPDATE schema_info SET value = ? WHERE key = 'schema'", (version,))
+
+    # manifests, events and rejections
 
     def save_manifest(self, manifest: RunManifest) -> None:
         payload, digest = manifest.to_json_bytes().decode("utf-8"), manifest.sha256()
@@ -209,3 +273,118 @@ class SqliteRecordStore:
         with self._lock:
             rows = self._conn.execute(query + " ORDER BY seq", params).fetchall()
         return tuple(decode_rejection(row[0]) for row in rows)
+
+    # model and tool call records (append-only)
+
+    def _append(
+        self, table: str, id_column: str, records: Iterable[R], identity: Callable[[R], str]
+    ) -> int:
+        count = 0
+        with self._transaction() as conn:
+            for record in records:
+                payload, digest = encode_model(record)
+                cursor = conn.execute(
+                    f"INSERT OR IGNORE INTO {table} (run_id, {id_column}, sha256, payload) "
+                    "VALUES (?, ?, ?, ?)",
+                    (record.run_id, identity(record), digest, payload),
+                )
+                count += cursor.rowcount
+        return count
+
+    def _list(self, table: str, run_id: str, model: type[R]) -> tuple[R, ...]:
+        with self._lock:
+            rows = self._conn.execute(
+                f"SELECT payload FROM {table} WHERE run_id = ? ORDER BY seq", (run_id,)
+            ).fetchall()
+        return tuple(model.model_validate_json(row[0]) for row in rows)
+
+    def save_llm_calls(self, records: Iterable[LlmCallRecord]) -> int:
+        return self._append("llm_calls", "call_id", records, lambda r: r.call_id)
+
+    def llm_calls_for_run(self, run_id: str) -> tuple[LlmCallRecord, ...]:
+        return self._list("llm_calls", run_id, LlmCallRecord)
+
+    def save_tool_invocations(self, records: Iterable[ToolInvocationRecord]) -> int:
+        return self._append("tool_invocations", "invocation_id", records, lambda r: r.invocation_id)
+
+    def tool_invocations_for_run(self, run_id: str) -> tuple[ToolInvocationRecord, ...]:
+        return self._list("tool_invocations", run_id, ToolInvocationRecord)
+
+    # decisions (first committed decision wins)
+
+    def save_decision(self, record: DecisionRecord) -> DecisionSave:
+        payload, _ = encode_model(record)
+        material = record.material_sha256()
+        with self._transaction() as conn:
+            row = conn.execute(
+                "SELECT material_sha256, payload FROM decisions WHERE run_id = ?",
+                (record.run_id,),
+            ).fetchone()
+            if row is None:
+                conn.execute(
+                    "INSERT INTO decisions (run_id, material_sha256, payload) VALUES (?, ?, ?)",
+                    (record.run_id, material, payload),
+                )
+                return DecisionSave(record, "inserted")
+        stored = DecisionRecord.model_validate_json(row[1])
+        return DecisionSave(stored, "duplicate" if row[0] == material else "conflict")
+
+    def get_decision(self, run_id: str) -> DecisionRecord | None:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT payload FROM decisions WHERE run_id = ?", (run_id,)
+            ).fetchone()
+        return None if row is None else DecisionRecord.model_validate_json(row[0])
+
+    # action ledger
+
+    def begin_action(self, entry: ActionLedgerEntry) -> ActionLedgerEntry:
+        if entry.status != LedgerStatus.INTENT:
+            raise LedgerTransitionError("a ledger entry must begin in the intent status")
+        payload, _ = encode_model(entry)
+        with self._transaction() as conn:
+            row = conn.execute(
+                "SELECT payload FROM action_ledger WHERE idempotency_key = ?",
+                (entry.idempotency_key,),
+            ).fetchone()
+            if row is not None:
+                return ActionLedgerEntry.model_validate_json(row[0])
+            conn.execute(
+                "INSERT INTO action_ledger (idempotency_key, run_id, status, payload) "
+                "VALUES (?, ?, ?, ?)",
+                (entry.idempotency_key, entry.run_id, str(entry.status), payload),
+            )
+        return entry
+
+    def transition_action(
+        self,
+        idempotency_key: str,
+        status: LedgerStatus,
+        *,
+        at: datetime,
+        result: dict[str, Any] | None = None,
+        error: str | None = None,
+    ) -> ActionLedgerEntry:
+        with self._transaction() as conn:
+            row = conn.execute(
+                "SELECT payload FROM action_ledger WHERE idempotency_key = ?",
+                (idempotency_key,),
+            ).fetchone()
+            if row is None:
+                raise RecordStoreError(f"unknown action {idempotency_key!r}")
+            current = ActionLedgerEntry.model_validate_json(row[0])
+            updated = transition(current, status, at=at, result=result, error=error)
+            payload, _ = encode_model(updated)
+            conn.execute(
+                "UPDATE action_ledger SET status = ?, payload = ? WHERE idempotency_key = ?",
+                (str(updated.status), payload, idempotency_key),
+            )
+        return updated
+
+    def get_action(self, idempotency_key: str) -> ActionLedgerEntry | None:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT payload FROM action_ledger WHERE idempotency_key = ?",
+                (idempotency_key,),
+            ).fetchone()
+        return None if row is None else ActionLedgerEntry.model_validate_json(row[0])

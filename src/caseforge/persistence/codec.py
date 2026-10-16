@@ -5,16 +5,23 @@ from __future__ import annotations
 import dataclasses
 import json
 
+from pydantic import BaseModel
+
 from caseforge.common.hashing import canonical_json_bytes, sha256_hex
 from caseforge.events.envelope import EventEnvelope
 from caseforge.events.mapping import Rejection, RejectionCode
 from caseforge.events.vocabulary import Violation, ViolationCode
 
 
+def encode_model(model: BaseModel) -> tuple[str, str]:
+    """Return (canonical JSON payload, sha256) for any record model."""
+    data = model.model_dump(mode="json")
+    return canonical_json_bytes(data).decode("utf-8"), sha256_hex(data)
+
+
 def encode_event(event: EventEnvelope) -> tuple[str, str]:
     """Return (payload, sha256) for an event."""
-    data = event.model_dump(mode="json")
-    return canonical_json_bytes(data).decode("utf-8"), sha256_hex(data)
+    return encode_model(event)
 
 
 def event_sha256(event: EventEnvelope) -> str:
