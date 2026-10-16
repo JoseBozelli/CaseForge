@@ -13,6 +13,8 @@ AGENT_SIDE = (
     "caseforge.reasoning",
     "caseforge.governance",
 )
+GOVERNANCE_WRITE = ("caseforge.governance.store", "caseforge.governance.control_plane")
+GOVERNANCE_ALLOWED = ("caseforge.governance", "caseforge.composition")
 
 
 def _within(name: str, prefixes: tuple[str, ...]) -> bool:
@@ -55,6 +57,10 @@ def find_violations(src: Path) -> list[str]:
             _within(name, ("caseforge.simulation",)) for name in imports
         ):
             violations.append(f"{module} imports caseforge.simulation")
+        if not _within(module, GOVERNANCE_ALLOWED) and any(
+            _within(name, GOVERNANCE_WRITE) for name in imports
+        ):
+            violations.append(f"{module} imports governance write paths")
     return violations
 
 
@@ -89,3 +95,12 @@ def test_allows_simulation_internals_and_detects_relative_imports(tmp_path: Path
     assert find_violations(tmp_path) == []
     _write(tmp_path, "caseforge/simulation/other.py", "from . import world\n")
     assert find_violations(tmp_path) == ["caseforge.simulation.other: relative import"]
+
+
+def test_detects_agent_side_access_to_governance_write_paths(tmp_path: Path) -> None:
+    _write(
+        tmp_path,
+        "caseforge/agents/sneaky.py",
+        "from caseforge.governance.control_plane import ControlPlane\n",
+    )
+    assert find_violations(tmp_path) == ["caseforge.agents.sneaky imports governance write paths"]

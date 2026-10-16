@@ -67,6 +67,13 @@ class ToolRegistry:
         self._policies = dict(policies)
         self._clock = clock
 
+    def names(self) -> tuple[str, ...]:
+        """Every registered tool name, sorted."""
+        return tuple(sorted(self._specs))
+
+    def spec(self, name: str) -> ToolSpec:
+        return self._specs[name]
+
     def available(self, agent: str) -> tuple[ToolSpec, ...]:
         """Tools this agent may call, sorted by name."""
         return tuple(

@@ -7,7 +7,7 @@ import time
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.types import Command
@@ -28,11 +28,12 @@ from caseforge.governance.guards import (
     GovernedTools,
 )
 from caseforge.governance.models import RunUsage
-from caseforge.governance.permissions import APPROVE_ACTION
+from caseforge.governance.permissions import APPROVE_ACTION, RECONCILE_ACTION
 from caseforge.governance.store import GovernanceStore
 from caseforge.knowledge.bm25 import Bm25KnowledgeProvider
 from caseforge.memory.store_provider import StoreEpisodeProvider
 from caseforge.persistence.ports import RecordConflictError
+from caseforge.persistence.records import ActionLedgerEntry, LedgerStatus
 from caseforge.persistence.sqlite import SqliteRecordStore
 from caseforge.provenance.manifest import build_run_manifest
 from caseforge.reasoning.fake import FakeReasoner
@@ -267,6 +268,36 @@ class Container:
         if not final.get("halted"):
             self.control_plane.record(actor, f"approval.{decision}", target=run_id, detail=detail)
         return final
+
+    def reconcile_action(
+        self,
+        idempotency_key: str,
+        *,
+        actor: str,
+        outcome: Literal["succeeded", "failed"],
+        note: str,
+    ) -> ActionLedgerEntry:
+        """Resolve an action whose external result is unknown. Admin-only and audited."""
+        target = f"action:{idempotency_key}"
+        detail = {"outcome": outcome, "note": note}
+        self.control_plane.require(actor, RECONCILE_ACTION, target=target, detail=detail)
+        entry = self.store.get_action(idempotency_key)
+        if entry is None:
+            raise ValueError(f"unknown action {idempotency_key!r}")
+        if entry.status != LedgerStatus.UNKNOWN:
+            raise ValueError(
+                f"action {idempotency_key!r} is {entry.status}; "
+                "only unknown actions can be reconciled"
+            )
+        updated = self.store.transition_action(
+            idempotency_key,
+            LedgerStatus.SUCCEEDED if outcome == "succeeded" else LedgerStatus.FAILED,
+            at=self._clock(),
+            result={"reconciled_by": actor, "note": note},
+            error=None if outcome == "succeeded" else note,
+        )
+        self.control_plane.record(actor, "action.reconciled", target=target, detail=detail)
+        return updated
 
     def run_usage(self, run_id: str) -> RunUsage:
         """Spend counted for a run (model calls, tokens, estimated cost, tool calls)."""
