@@ -15,6 +15,7 @@ from caseforge.persistence.errors import RecordStoreError as RecordStoreError
 from caseforge.persistence.records import (
     ActionLedgerEntry,
     ApprovalRecord,
+    DecisionOutcomeRecord,
     DecisionRecord,
     DecisionSave,
     EpisodeRecord,
@@ -88,5 +89,13 @@ class RecordStore(Protocol):
     def save_episode(self, record: EpisodeRecord) -> None: ...
 
     def episodes_for_tenant(self, tenant_id: str) -> tuple[EpisodeRecord, ...]: ...
+
+    def save_decision_outcome(self, record: DecisionOutcomeRecord) -> None: ...
+
+    def get_decision_outcome(self, run_id: str) -> DecisionOutcomeRecord | None: ...
+
+    def decision_outcomes(
+        self, *, tenant_id: str | None = None, outcome_status: str | None = None
+    ) -> tuple[DecisionOutcomeRecord, ...]: ...
 
     def close(self) -> None: ...

@@ -10,7 +10,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
 from caseforge.common.hashing import sha256_hex
-from caseforge.events.envelope import NonEmptyStr, UtcDatetime
+from caseforge.events.envelope import NonEmptyStr, Sha256Hex, UtcDatetime
 from caseforge.events.vocabulary import Name
 from caseforge.persistence.errors import LedgerTransitionError
 
@@ -133,3 +133,27 @@ class EpisodeRecord(_Frozen):
     outcome_status: NonEmptyStr
     summary: NonEmptyStr
     recorded_at: UtcDatetime
+
+
+class DecisionOutcomeRecord(_Frozen):
+    """Links one run's decision, execution and observed outcome. One per run; refreshed later."""
+
+    run_id: NonEmptyStr
+    tenant_id: NonEmptyStr
+    case_id: NonEmptyStr
+    decision_source: NonEmptyStr
+    action_type: Name
+    candidate_actions: tuple[str, ...] = ()
+    evidence_refs: tuple[str, ...] = ()
+    approval: Literal["approved", "rejected"] | None = None
+    ledger_status: NonEmptyStr
+    outcome_status: NonEmptyStr
+    acted_at: UtcDatetime
+    horizon_end: UtcDatetime | None = None
+    outcome_observed_at: UtcDatetime | None = None
+    config_sha256: Sha256Hex | None = None
+    llm_calls: int = 0
+    total_tokens: int = 0
+    cost_usd: float = 0.0
+    tool_calls: int = 0
+    updated_at: UtcDatetime

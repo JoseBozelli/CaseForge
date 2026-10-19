@@ -33,6 +33,7 @@ from caseforge.persistence.ports import IntakeResult
 from caseforge.persistence.records import (
     ActionLedgerEntry,
     ApprovalRecord,
+    DecisionOutcomeRecord,
     DecisionRecord,
     DecisionSave,
     EpisodeRecord,
@@ -43,7 +44,7 @@ from caseforge.provenance.manifest import RunManifest
 from caseforge.reasoning.models import LlmCallRecord
 from caseforge.tools.models import ToolInvocationRecord
 
-SCHEMA_VERSION: Final = "records.v4"
+SCHEMA_VERSION: Final = "records.v5"
 R = TypeVar("R", bound=BaseModel)
 
 _V1_STATEMENTS: Final = (
@@ -125,10 +126,20 @@ _V4_STATEMENTS: Final = (
     )""",
     "CREATE INDEX IF NOT EXISTS episodes_by_tenant ON episodes (tenant_id, seq)",
 )
+_V5_STATEMENTS: Final = (
+    """CREATE TABLE IF NOT EXISTS decision_outcomes (
+        seq INTEGER PRIMARY KEY AUTOINCREMENT,
+        run_id TEXT NOT NULL UNIQUE,
+        tenant_id TEXT NOT NULL,
+        outcome_status TEXT NOT NULL,
+        payload TEXT NOT NULL
+    )""",
+)
 _MIGRATIONS: Final = {
     "records.v1": ("records.v2", _V2_STATEMENTS),
     "records.v2": ("records.v3", _V3_STATEMENTS),
     "records.v3": ("records.v4", _V4_STATEMENTS),
+    "records.v4": ("records.v5", _V5_STATEMENTS),
 }
 
 
@@ -145,7 +156,13 @@ class SqliteRecordStore:
             path,
             label="records",
             schema_version=SCHEMA_VERSION,
-            base_statements=(*_V1_STATEMENTS, *_V2_STATEMENTS, *_V3_STATEMENTS, *_V4_STATEMENTS),
+            base_statements=(
+                *_V1_STATEMENTS,
+                *_V2_STATEMENTS,
+                *_V3_STATEMENTS,
+                *_V4_STATEMENTS,
+                *_V5_STATEMENTS,
+            ),
             migrations=_MIGRATIONS,
             error=RecordStoreError,
         )
@@ -404,3 +421,40 @@ class SqliteRecordStore:
                 "SELECT payload FROM episodes WHERE tenant_id = ? ORDER BY seq", (tenant_id,)
             ).fetchall()
         return tuple(EpisodeRecord.model_validate_json(row[0]) for row in rows)
+
+    # decision outcomes (one per run; refreshed as outcomes become known)
+
+    def save_decision_outcome(self, record: DecisionOutcomeRecord) -> None:
+        payload, _ = encode_model(record)
+        with self._db.transaction() as conn:
+            conn.execute(
+                "INSERT INTO decision_outcomes (run_id, tenant_id, outcome_status, payload) "
+                "VALUES (?, ?, ?, ?) ON CONFLICT(run_id) DO UPDATE SET "
+                "tenant_id = excluded.tenant_id, outcome_status = excluded.outcome_status, "
+                "payload = excluded.payload",
+                (record.run_id, record.tenant_id, record.outcome_status, payload),
+            )
+
+    def get_decision_outcome(self, run_id: str) -> DecisionOutcomeRecord | None:
+        with self._db.reading() as conn:
+            row = conn.execute(
+                "SELECT payload FROM decision_outcomes WHERE run_id = ?", (run_id,)
+            ).fetchone()
+        return None if row is None else DecisionOutcomeRecord.model_validate_json(row[0])
+
+    def decision_outcomes(
+        self, *, tenant_id: str | None = None, outcome_status: str | None = None
+    ) -> tuple[DecisionOutcomeRecord, ...]:
+        clauses, params = [], []
+        if tenant_id is not None:
+            clauses.append("tenant_id = ?")
+            params.append(tenant_id)
+        if outcome_status is not None:
+            clauses.append("outcome_status = ?")
+            params.append(outcome_status)
+        where = f" WHERE {' AND '.join(clauses)}" if clauses else ""
+        with self._db.reading() as conn:
+            rows = conn.execute(
+                f"SELECT payload FROM decision_outcomes{where} ORDER BY seq", params
+            ).fetchall()
+        return tuple(DecisionOutcomeRecord.model_validate_json(row[0]) for row in rows)

@@ -31,9 +31,10 @@ from caseforge.governance.models import RunUsage
 from caseforge.governance.permissions import APPROVE_ACTION, RECONCILE_ACTION
 from caseforge.governance.store import GovernanceStore
 from caseforge.knowledge.bm25 import Bm25KnowledgeProvider
+from caseforge.memory.episodes import describe_episode
 from caseforge.memory.store_provider import StoreEpisodeProvider
 from caseforge.persistence.ports import RecordConflictError
-from caseforge.persistence.records import ActionLedgerEntry, LedgerStatus
+from caseforge.persistence.records import ActionLedgerEntry, DecisionOutcomeRecord, LedgerStatus
 from caseforge.persistence.sqlite import SqliteRecordStore
 from caseforge.provenance.manifest import build_run_manifest
 from caseforge.reasoning.fake import FakeReasoner
@@ -229,6 +230,8 @@ class Container:
             "synthesis_round": 0,
             "decision": None,
             "approval": None,
+            "action": None,
+            "outcome": None,
             "worker_results": None,
             "llm_calls": None,
             "tool_calls": None,
@@ -299,6 +302,94 @@ class Container:
         self.control_plane.record(actor, "action.reconciled", target=target, detail=detail)
         return updated
 
+    def refresh_outcomes(self, as_of: datetime) -> int:
+        """Re-observe pending outcomes of executed actions; update records and episodes."""
+        updated = 0
+        for record in self.store.decision_outcomes(outcome_status="pending"):
+            if record.ledger_status != LedgerStatus.SUCCEEDED:
+                continue
+            try:
+                observation = self.environment.observe(
+                    tenant_id=record.tenant_id,
+                    case_id=record.case_id,
+                    action_id=f"{record.run_id}:{record.action_type}",
+                    as_of=as_of,
+                )
+            except Exception:  # an unreachable outcome source leaves the record pending
+                continue
+            status = str(observation.status)
+            if status == record.outcome_status:
+                continue
+            self.store.save_decision_outcome(
+                record.model_copy(
+                    update={
+                        "outcome_status": status,
+                        "horizon_end": observation.horizon_end,
+                        "outcome_observed_at": observation.observed_at,
+                        "updated_at": self._clock(),
+                    }
+                )
+            )
+            self._refresh_episode(record.tenant_id, record.run_id, status)
+            updated += 1
+        return updated
+
+    def _record_outcome(self, final: dict[str, Any]) -> None:
+        action, outcome = final.get("action"), final.get("outcome")
+        if not action or not outcome:
+            return  # paused for approval or otherwise incomplete
+        run_id = final["run_id"]
+        decision = self.store.get_decision(run_id)
+        synthesis_output = (final.get("synthesis") or {}).get("output") or {}
+        if action["source"] == "supervisor":
+            candidates = tuple(synthesis_output.get("candidate_actions") or ())
+        else:
+            candidates = (action["action_type"],)
+        manifest = self.store.get_manifest(run_id)
+        usage = self.control_plane.run_usage(run_id)
+        self.store.save_decision_outcome(
+            DecisionOutcomeRecord(
+                run_id=run_id,
+                tenant_id=final["tenant_id"],
+                case_id=final["case_id"],
+                decision_source=action["source"],
+                action_type=action["action_type"],
+                candidate_actions=candidates,
+                evidence_refs=decision.evidence_refs if decision else (),
+                approval=(final.get("approval") or {}).get("decision"),
+                ledger_status=action["ledger_status"],
+                outcome_status=outcome["status"],
+                acted_at=action["acted_at"],
+                horizon_end=outcome.get("horizon_end"),
+                outcome_observed_at=outcome.get("observed_at"),
+                config_sha256=manifest.effective_config_sha256 if manifest else None,
+                llm_calls=usage.llm_calls,
+                total_tokens=usage.total_tokens,
+                cost_usd=usage.cost_usd,
+                tool_calls=usage.tool_calls,
+                updated_at=self._clock(),
+            )
+        )
+
+    def _refresh_episode(self, tenant_id: str, run_id: str, outcome_status: str) -> None:
+        episode = next(
+            (e for e in self.store.episodes_for_tenant(tenant_id) if e.run_id == run_id), None
+        )
+        if episode is None:
+            return
+        decision = self.store.get_decision(run_id)
+        summary = describe_episode(
+            event_types=episode.event_types,
+            source=episode.decision_source,
+            action_type=episode.action_type,
+            reason=decision.reason if decision else None,
+            ledger_status=episode.ledger_status,
+            outcome_status=outcome_status,
+        )
+        self.store.save_episode(
+            episode.model_copy(update={"outcome_status": outcome_status, "summary": summary})
+        )
+
     def run_usage(self, run_id: str) -> RunUsage:
         """Spend counted for a run (model calls, tokens, estimated cost, tool calls)."""
         return self.control_plane.run_usage(run_id)
@@ -307,16 +398,21 @@ class Container:
         self.control_plane.check(boundary)
 
     def _invoke(self, payload: Any, run_id: str) -> dict[str, Any]:
-        """Run the graph; an emergency stop returns the saved state marked as halted."""
+        """Run the graph and record the decision outcome of a completed run.
+
+        An emergency stop returns the saved state marked as halted.
+        """
         config = {"configurable": {"thread_id": run_id}}
         try:
-            return self.graph.invoke(payload, config)
+            final = self.graph.invoke(payload, config)
         except EmergencyStopEngaged as stop:
             self.control_plane.record(
                 "system", "run.halted", target=run_id, detail={"reason": str(stop)}
             )
             state = dict(self.graph.get_state(config).values)
             return {**state, "halted": True, "halt_reason": str(stop)}
+        self._record_outcome(final)
+        return final
 
     def resume(self, run_id: str) -> dict[str, Any]:
         """Continue an interrupted run from its last checkpoint."""

@@ -20,6 +20,7 @@ from caseforge.persistence.ports import IntakeResult
 from caseforge.persistence.records import (
     ActionLedgerEntry,
     ApprovalRecord,
+    DecisionOutcomeRecord,
     DecisionRecord,
     DecisionSave,
     EpisodeRecord,
@@ -63,6 +64,7 @@ class InMemoryRecordStore:
         self._approvals: list[ApprovalRecord] = []
         self._approval_keys: set[tuple[str, str]] = set()
         self._episodes: dict[str, EpisodeRecord] = {}
+        self._outcomes: dict[str, DecisionOutcomeRecord] = {}
 
     def __enter__(self) -> InMemoryRecordStore:
         return self
@@ -185,3 +187,19 @@ class InMemoryRecordStore:
 
     def episodes_for_tenant(self, tenant_id: str) -> tuple[EpisodeRecord, ...]:
         return tuple(e for e in self._episodes.values() if e.tenant_id == tenant_id)
+
+    def save_decision_outcome(self, record: DecisionOutcomeRecord) -> None:
+        self._outcomes[record.run_id] = record
+
+    def get_decision_outcome(self, run_id: str) -> DecisionOutcomeRecord | None:
+        return self._outcomes.get(run_id)
+
+    def decision_outcomes(
+        self, *, tenant_id: str | None = None, outcome_status: str | None = None
+    ) -> tuple[DecisionOutcomeRecord, ...]:
+        return tuple(
+            r
+            for r in self._outcomes.values()
+            if (tenant_id is None or r.tenant_id == tenant_id)
+            and (outcome_status is None or r.outcome_status == outcome_status)
+        )

@@ -12,6 +12,7 @@ from caseforge.persistence.ports import RecordConflictError
 from caseforge.persistence.records import (
     ActionLedgerEntry,
     ApprovalRecord,
+    DecisionOutcomeRecord,
     DecisionRecord,
     EpisodeRecord,
     LedgerStatus,
@@ -340,3 +341,29 @@ def test_episodes_are_replaced_per_run_and_scoped_by_tenant(store) -> None:
     episodes = store.episodes_for_tenant("tenant-a")
     assert [e.run_id for e in episodes] == ["run-1", "run-2"]
     assert episodes[0] == updated
+
+
+def _outcome_record(run_id: str, status: str = "pending", tenant_id: str = "tenant-a"):
+    return DecisionOutcomeRecord(
+        run_id=run_id,
+        tenant_id=tenant_id,
+        case_id="case-1",
+        decision_source="triage",
+        action_type="send_reminder",
+        candidate_actions=("send_reminder",),
+        ledger_status="succeeded",
+        outcome_status=status,
+        acted_at=BASE,
+        updated_at=BASE,
+    )
+
+
+def test_decision_outcomes_are_upserted_and_filtered(store) -> None:
+    store.save_decision_outcome(_outcome_record("run-1"))
+    store.save_decision_outcome(_outcome_record("run-2", tenant_id="tenant-b"))
+    refreshed = _outcome_record("run-1", status="success")
+    store.save_decision_outcome(refreshed)
+    assert store.get_decision_outcome("run-1") == refreshed
+    assert [r.run_id for r in store.decision_outcomes()] == ["run-1", "run-2"]
+    assert store.decision_outcomes(outcome_status="pending")[0].run_id == "run-2"
+    assert store.decision_outcomes(tenant_id="tenant-a") == (refreshed,)
