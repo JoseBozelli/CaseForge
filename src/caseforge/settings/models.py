@@ -6,9 +6,20 @@ configuration (and its hash) is identical on every operating system.
 
 from __future__ import annotations
 
-from typing import Annotated, Literal
+import json
+from collections.abc import Mapping
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    JsonValue,
+    SerializationInfo,
+    SerializerFunctionWrapHandler,
+    model_serializer,
+    model_validator,
+)
 
 from caseforge.engine.triage import TriagePolicy
 from caseforge.events.envelope import NonEmptyStr, UtcDatetime
@@ -19,8 +30,40 @@ from caseforge.tools.models import ToolPolicy
 RelativePath = Annotated[str, Field(min_length=1, pattern=r"^[^/\\:][^\\:]*$")]
 
 
+def _sort_sets(original: Any, dumped: Any) -> Any:
+    """Walk the original objects beside their JSON dump and emit every set sorted.
+
+    Sets have no stable order across processes; nested models from other packages
+    (for example tool policies) are covered because the walk follows the objects.
+    """
+    if isinstance(original, (set, frozenset)) and isinstance(dumped, list):
+        items = [_sort_sets(o, d) for o, d in zip(original, dumped, strict=True)]
+        return sorted(items, key=lambda item: json.dumps(item, sort_keys=True, default=str))
+    if isinstance(original, BaseModel) and isinstance(dumped, dict):
+        fields = type(original).model_fields
+        return {
+            key: _sort_sets(getattr(original, key), value) if key in fields else value
+            for key, value in dumped.items()
+        }
+    if isinstance(original, Mapping) and isinstance(dumped, dict):
+        return {
+            key: _sort_sets(original[key], value) if key in original else value
+            for key, value in dumped.items()
+        }
+    if isinstance(original, (list, tuple)) and isinstance(dumped, list):
+        return [_sort_sets(o, d) for o, d in zip(original, dumped, strict=True)]
+    return dumped
+
+
 class _Section(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
+
+    @model_serializer(mode="wrap")
+    def _stable_sets(
+        self, handler: SerializerFunctionWrapHandler, info: SerializationInfo
+    ) -> dict[str, Any]:
+        data = handler(self)
+        return _sort_sets(self, data) if info.mode_is_json() else data
 
 
 class RunSettings(_Section):
