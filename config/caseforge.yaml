@@ -87,3 +87,6 @@ governance:
   retries:
     max_attempts: 3
     backoff_seconds: 0.5
+evaluation:
+  benchmark_path: evaluation/benchmark.v1.yaml
+  results_dir: ../eval_results

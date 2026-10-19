@@ -159,6 +159,11 @@ class GovernanceSettings(_Section):
         return self
 
 
+class EvaluationSettings(_Section):
+    benchmark_path: RelativePath
+    results_dir: RelativePath
+
+
 class Settings(_Section):
     """Root settings document. Secrets never belong here."""
 
@@ -176,3 +181,4 @@ class Settings(_Section):
     agents: AgentSettings
     engine: EngineSettings
     governance: GovernanceSettings
+    evaluation: EvaluationSettings
