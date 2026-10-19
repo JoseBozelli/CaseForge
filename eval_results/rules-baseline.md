@@ -2,8 +2,8 @@
 
 - Mode: `deterministic`
 - Benchmark: `caseforge-core` v1 (sha256 `238ab8307b3a`)
-- Configuration sha256: `1f337818e4e7`
-- Git commit: `6ceea3300eed`
+- Configuration sha256: `6872a9885833`
+- Git commit: `ae41a8b12a66`
 - Outcomes are synthetic: they measure decisions inside the simulator, not real-world effects.
 
 ## Summary
