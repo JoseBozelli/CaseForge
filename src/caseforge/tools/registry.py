@@ -66,6 +66,14 @@ class ToolRegistry:
             raise ConfigError(f"tool policies reference unknown tools {unknown}")
         self._policies = dict(policies)
         self._clock = clock
+        self._faults: frozenset[str] = frozenset()
+
+    def inject_faults(self, tools: frozenset[str] | set[str]) -> None:
+        """Evaluation-only fault switch: listed tools fail as if their handlers raised.
+
+        Not reachable through any tool call; an empty set clears it.
+        """
+        self._faults = frozenset(tools)
 
     def names(self) -> tuple[str, ...]:
         """Every registered tool name, sorted."""
@@ -114,6 +122,8 @@ class ToolRegistry:
             return self._fail(
                 call, context, started_at, ToolErrorCode.INVALID_ARGUMENTS, _summarize(exc)
             )
+        if call.tool in self._faults:
+            return self._fail(call, context, started_at, ToolErrorCode.TOOL_ERROR, "InjectedFault")
         try:
             output = spec.handler(arguments, context, self._policies[call.tool])
             if not isinstance(output, spec.result_model):

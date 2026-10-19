@@ -162,6 +162,11 @@ class GovernanceSettings(_Section):
 class EvaluationSettings(_Section):
     benchmark_path: RelativePath
     results_dir: RelativePath
+    workspace_dir: RelativePath = "../data/evaluation"
+    outcome_wait_minutes: int = Field(default=7200, ge=0)
+    approver: Identifier = "approver-1"
+    admin: Identifier = "admin-1"
+    failing_tools: frozenset[Name] = frozenset({"get_timeline", "search_policies"})
 
 
 class Settings(_Section):

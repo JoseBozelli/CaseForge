@@ -90,3 +90,8 @@ governance:
 evaluation:
   benchmark_path: evaluation/benchmark.v1.yaml
   results_dir: ../eval_results
+  workspace_dir: ../data/evaluation
+  outcome_wait_minutes: 7200      # simulated time allowed for outcomes before scoring
+  approver: approver-1
+  admin: admin-1
+  failing_tools: [get_timeline, search_policies]
