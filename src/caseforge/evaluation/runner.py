@@ -144,13 +144,14 @@ def _score(
     executed = [a.action_type for a in truth.actions]
     action_type = outcome.action_type if outcome else None
     route = (final.get("triage") or {}).get("route")
+    agent_route = "supervisor" if route == "single_agent" else route  # both are the agent path
     correct = action_type in truth.effective_actions if action_type else False
     escalation = settings.engine.escalation_action
     if settings.engine.mode == "deterministic":
         route_ok = None  # rules-only mode has no supervisor route to compare
     else:
         route_ok = (
-            case.expected_route == "any" or route == case.expected_route or status == "halted"
+            case.expected_route == "any" or agent_route == case.expected_route or status == "halted"
         )
     return CaseResult(
         key=case.key,

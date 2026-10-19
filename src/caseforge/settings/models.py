@@ -121,6 +121,7 @@ class AgentSettings(_Section):
     supervisor: SupervisorSettings
     evidence: WorkerSettings
     policy: WorkerSettings
+    single: WorkerSettings
 
 
 class StorageSettings(_Section):
@@ -145,7 +146,7 @@ class KnowledgeSettings(_Section):
 class EngineSettings(_Section):
     """deterministic: rules only (baseline). hierarchical: rule fast path, then agents."""
 
-    mode: Literal["deterministic", "hierarchical"] = "hierarchical"
+    mode: Literal["deterministic", "hierarchical", "single_agent"] = "hierarchical"
     escalation_action: Name
     approval_required: frozenset[Name] = frozenset()
 

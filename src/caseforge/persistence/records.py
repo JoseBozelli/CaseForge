@@ -26,7 +26,7 @@ class DecisionRecord(_Frozen):
     case_id: NonEmptyStr
     tenant_id: NonEmptyStr
     decision_id: NonEmptyStr
-    source: Literal["triage", "supervisor", "escalation"]
+    source: Literal["triage", "supervisor", "single_agent", "escalation"]
     action_type: Name
     rule_id: str | None = None
     evidence_refs: tuple[str, ...] = ()

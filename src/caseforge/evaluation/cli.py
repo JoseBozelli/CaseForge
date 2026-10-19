@@ -12,7 +12,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default="config/caseforge.yaml")
     parser.add_argument("--label", required=True, help="report name, e.g. rules-baseline")
-    parser.add_argument("--mode", choices=["deterministic", "hierarchical"])
+    parser.add_argument("--mode", choices=["deterministic", "hierarchical", "single_agent"])
     parser.add_argument("--limit", type=int, help="run only the first N cases")
     args = parser.parse_args(argv)
 

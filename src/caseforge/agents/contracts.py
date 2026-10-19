@@ -134,3 +134,22 @@ class Synthesis(_Strict):
         if self.proposal and self.proposal.action_type not in self.candidate_actions:
             raise ValueError("the proposed action must be among candidate_actions")
         return self
+
+
+class SingleAgentStep(_Strict):
+    """One single-agent decision: call exactly one tool, or decide the case."""
+
+    action: Literal["call_tool", "decide"]
+    rationale: str = Field(min_length=1, max_length=300)
+    tool: ToolRequest | None = None
+    decision: Synthesis | None = None
+
+    @model_validator(mode="after")
+    def _consistent(self) -> SingleAgentStep:
+        if self.action == "call_tool" and (self.tool is None or self.decision is not None):
+            raise ValueError("call_tool requires a tool request and no decision")
+        if self.action == "decide" and (self.decision is None or self.tool is not None):
+            raise ValueError("decide requires a decision and no tool request")
+        if self.decision is not None and self.decision.decision == "clarify":
+            raise ValueError("a single agent cannot ask for clarification")
+        return self

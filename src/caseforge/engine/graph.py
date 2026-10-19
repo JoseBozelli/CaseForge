@@ -3,6 +3,7 @@ approval gate.
 
 intake -> triage -> [approval_gate] -> act (rule matched, or deterministic mode)
                  -> supervisor_plan -> run_worker x N (parallel via Send) -> synthesize
+                 -> single_agent (single-agent mode) -> [approval_gate] -> act | escalate
 synthesize -> [approval_gate] -> act | escalate | run_worker (bounded clarification)
 escalate -> [approval_gate] -> act -> observe
 
@@ -22,6 +23,7 @@ from typing import Annotated, Any, Literal, TypedDict
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send, interrupt
 
+from caseforge.agents.single import SingleAgent
 from caseforge.agents.supervisor import Supervisor, SupervisorStatus
 from caseforge.agents.workers import ToolInvoker, Worker
 from caseforge.engine.ports import ActionExecutor, CaseSource, OutcomeSource
@@ -97,12 +99,13 @@ class EngineDeps:
     tools: ToolInvoker
     supervisor: Supervisor
     workers: Mapping[str, Worker]
-    mode: Literal["deterministic", "hierarchical"]
+    mode: Literal["deterministic", "hierarchical", "single_agent"]
     escalation_action: str
     clock: Callable[[], datetime]
     fault: Callable[[str], None] = no_fault
     approval_required: frozenset[str] = field(default_factory=frozenset)
     guard: Callable[[str], None] = no_guard
+    single_agent: SingleAgent | None = None
 
 
 def _as_of(state: Mapping[str, Any]) -> datetime:
@@ -172,7 +175,10 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         visible = sorted({e.event_type for e in events if e.recorded_at <= as_of})
         decision = deps.triage.decide(visible)
         fast = decision.rule_id is not None or deps.mode == "deterministic"
-        route = "fast_path" if fast else "supervisor"
+        if fast:
+            route = "fast_path"
+        else:
+            route = "single_agent" if deps.mode == "single_agent" else "supervisor"
         record = {
             "rule_id": decision.rule_id,
             "action_type": decision.action_type,
@@ -306,6 +312,47 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
             proposal = output["proposal"]
             update["decision"] = {
                 "source": "supervisor",
+                "action_type": proposal["action_type"],
+                "evidence_refs": proposal["evidence_refs"],
+            }
+        return update
+
+    def single_agent(state: CaseRunState) -> CaseRunState:
+        deps.guard("single_agent")
+        if deps.single_agent is None:
+            raise RuntimeError("single_agent mode requires a configured single agent")
+        result = deps.single_agent.run(
+            run_id=state["run_id"],
+            tenant_id=state["tenant_id"],
+            case_id=state["case_id"],
+            as_of=_as_of(state),
+        )
+        deps.store.save_llm_calls(result.llm_calls)
+        deps.store.save_tool_invocations(result.tool_calls)
+        output = result.output
+        decision = output.get("decision") if output else None
+        update: CaseRunState = {
+            "synthesis": {
+                "status": str(result.status),
+                "output": output,
+                "error": result.error,
+                "round": 0,
+            },
+            "llm_calls": _dump(result.llm_calls),
+            "tool_calls": _dump(result.tool_calls),
+            "trace": [
+                {
+                    "node": "single_agent",
+                    "status": str(result.status),
+                    "decision": decision,
+                    "steps_used": result.steps_used,
+                }
+            ],
+        }
+        if result.status == SupervisorStatus.OK and decision == "propose_action":
+            proposal = output["proposal"]
+            update["decision"] = {
+                "source": "single_agent",
                 "action_type": proposal["action_type"],
                 "evidence_refs": proposal["evidence_refs"],
             }
@@ -528,9 +575,18 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
         return "approval_gate" if action_type in deps.approval_required else "act"
 
     def route_after_triage(state: CaseRunState) -> str:
-        if state["triage"]["route"] == "fast_path":
+        route = state["triage"]["route"]
+        if route == "fast_path":
             return to_execution(state)
-        return "supervisor_plan"
+        return "single_agent" if route == "single_agent" else "supervisor_plan"
+
+    def route_after_single(state: CaseRunState) -> str:
+        synthesis = state["synthesis"] or {}
+        output = synthesis.get("output") or {}
+        proposes = output.get("decision") == "propose_action"
+        if synthesis.get("status") == SupervisorStatus.OK and proposes:
+            return to_execution(state)
+        return "escalate"
 
     def route_after_plan(state: CaseRunState) -> str | list[Send]:
         plan = state["plan"] or {}
@@ -566,6 +622,7 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
     builder.add_node("supervisor_plan", supervisor_plan)
     builder.add_node("run_worker", run_worker)
     builder.add_node("synthesize", synthesize)
+    builder.add_node("single_agent", single_agent)
     builder.add_node("escalate", escalate)
     builder.add_node("approval_gate", approval_gate)
     builder.add_node("act", act)
@@ -573,7 +630,10 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
     builder.add_edge(START, "intake")
     builder.add_edge("intake", "triage")
     builder.add_conditional_edges(
-        "triage", route_after_triage, ["act", "approval_gate", "supervisor_plan"]
+        "triage", route_after_triage, ["act", "approval_gate", "supervisor_plan", "single_agent"]
+    )
+    builder.add_conditional_edges(
+        "single_agent", route_after_single, ["act", "approval_gate", "escalate"]
     )
     builder.add_conditional_edges(
         "supervisor_plan", route_after_plan, ["escalate", "synthesize", "run_worker"]

@@ -32,10 +32,10 @@ triage:
       unless_any: [document.received]
       action: send_reminder
 tools:
-  get_case: {allowed_agents: [supervisor, evidence]}
-  get_timeline: {allowed_agents: [evidence], max_results: 50}
-  search_policies: {allowed_agents: [policy], max_results: 5}
-  search_prior_episodes: {allowed_agents: [evidence], max_results: 5}
+  get_case: {allowed_agents: [supervisor, evidence, single]}
+  get_timeline: {allowed_agents: [evidence, single], max_results: 50}
+  search_policies: {allowed_agents: [policy, single], max_results: 5}
+  search_prior_episodes: {allowed_agents: [evidence, single], max_results: 5}
 knowledge:
   corpus_dir: knowledge/policies
   k1: 1.5
@@ -58,8 +58,9 @@ agents:
     allowed_actions: [send_reminder, request_document, reassign_task, escalate_case, grant_policy_exception]
   evidence: {prompt_version: 1, max_steps: 4}
   policy: {prompt_version: 1, max_steps: 3}
+  single: {prompt_version: 1, max_steps: 6}
 engine:
-  mode: hierarchical        # deterministic (rules only) | hierarchical (rule fast path, then agents)
+  mode: hierarchical        # deterministic (rules only) | hierarchical (rule fast path, then agents) | single_agent
   escalation_action: escalate_case
   approval_required: [grant_policy_exception]
 memory:

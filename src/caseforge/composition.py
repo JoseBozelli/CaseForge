@@ -14,6 +14,7 @@ from langgraph.types import Command
 
 from caseforge.adapters.simulation import SimulatedEnvironment
 from caseforge.adapters.simulation_log import SqliteSimulationLog
+from caseforge.agents.single import SingleAgent
 from caseforge.agents.supervisor import Supervisor
 from caseforge.agents.workers import Worker, evidence_worker, policy_worker
 from caseforge.common.hashing import sha256_hex
@@ -163,6 +164,13 @@ class Container:
                 max_steps=agents.policy.max_steps,
             ),
         }
+        single_agent = SingleAgent(
+            caller=self.caller,
+            tools=self._governed_tools,
+            template_version=settings.agents.single.prompt_version,
+            max_steps=settings.agents.single.max_steps,
+            allowed_actions=settings.agents.supervisor.allowed_actions,
+        )
         deps = EngineDeps(
             store=self.store,
             normalizers={
@@ -176,6 +184,7 @@ class Container:
             tools=self._governed_tools,
             supervisor=self.supervisor,
             workers=self.workers,
+            single_agent=single_agent,
             mode=settings.engine.mode,
             escalation_action=settings.engine.escalation_action,
             clock=clock,
@@ -341,7 +350,7 @@ class Container:
         run_id = final["run_id"]
         decision = self.store.get_decision(run_id)
         synthesis_output = (final.get("synthesis") or {}).get("output") or {}
-        if action["source"] == "supervisor":
+        if action["source"] in {"supervisor", "single_agent"}:
             candidates = tuple(synthesis_output.get("candidate_actions") or ())
         else:
             candidates = (action["action_type"],)
