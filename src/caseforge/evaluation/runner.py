@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import shutil
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -196,6 +196,8 @@ def run_benchmark(
     reasoner_factory: ReasonerFactory | None = None,
     clock: Callable[[], datetime] | None = None,
     limit: int | None = None,
+    case_keys: Sequence[str] | None = None,
+    spend_cap_usd: float | None = None,
     write: bool = True,
 ) -> EvaluationReport:
     settings_path = Path(settings_path).resolve()
@@ -209,18 +211,35 @@ def run_benchmark(
             allowed_actions=settings.agents.supervisor.allowed_actions,
             approval_required=settings.engine.approval_required,
         )
-    cases = benchmark.cases[:limit] if limit else benchmark.cases
-    results = [
-        run_case(
-            case,
-            settings_path=settings_path,
-            label=label,
-            base_environ=base_environ,
-            reasoner_factory=reasoner_factory,
-            clock=clock,
+    cases = benchmark.cases
+    if case_keys:
+        by_key = {case.key: case for case in cases}
+        unknown = sorted(set(case_keys) - set(by_key))
+        if unknown:
+            raise ValueError(f"unknown benchmark cases {unknown}")
+        cases = tuple(by_key[key] for key in case_keys)
+    if limit:
+        cases = cases[:limit]
+    results: list[CaseResult] = []
+    stopped_early = False
+    for case in cases:
+        if spend_cap_usd is not None and sum(r.cost_usd for r in results) >= spend_cap_usd:
+            stopped_early = True  # never start a case once the cap is reached
+            break
+        results.append(
+            run_case(
+                case,
+                settings_path=settings_path,
+                label=label,
+                base_environ=base_environ,
+                reasoner_factory=reasoner_factory,
+                clock=clock,
+            )
         )
-        for case in cases
-    ]
+    reasoning = settings.reasoning
+    reasoner = f"{reasoning.provider}/{reasoning.model}"
+    if reasoning.provider == "anthropic":
+        reasoner += f" ({reasoning.source})"
     git = read_git_state(settings_path.parent.parent)
     report = EvaluationReport(
         label=label,
@@ -231,6 +250,9 @@ def run_benchmark(
         config_sha256=sha256_hex(settings.model_dump(mode="json")),
         git_commit=git.commit,
         git_dirty=git.dirty,
+        reasoner=reasoner,
+        spend_cap_usd=spend_cap_usd,
+        stopped_early=stopped_early,
         created_at=(clock() if clock else datetime.now(UTC)).isoformat(),
         cases=results,
         summary=summarize(results),

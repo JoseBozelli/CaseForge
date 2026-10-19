@@ -91,12 +91,16 @@ class ModelPricing(_Section):
 class ReasoningSettings(_Section):
     """fake: scripted outputs injected by tests; replay: responses from a recorded cassette."""
 
-    provider: Literal["fake", "replay"]
+    provider: Literal["fake", "replay", "anthropic"]
     model: NonEmptyStr
     params: dict[str, JsonValue] = Field(default_factory=dict)
     prompts_dir: RelativePath
     cassette_path: RelativePath | None = None
     pricing: ModelPricing = Field(default_factory=ModelPricing)
+    price_table: dict[str, ModelPricing] = Field(default_factory=dict)
+    source: Literal["live", "replay"] = "live"
+    api_key_file: RelativePath = "../.secrets/anthropic_api_key"
+    timeout_seconds: float = Field(default=60.0, gt=0)
 
     @model_validator(mode="after")
     def _replay_needs_cassette(self) -> ReasoningSettings:

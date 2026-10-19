@@ -42,14 +42,20 @@ knowledge:
   b: 0.75
   min_score: 1.0
 reasoning:
-  provider: fake            # fake (scripted, injected by tests) | replay (recorded cassette)
+  provider: fake            # fake (scripted) | replay (cassette) | anthropic (Claude API)
+  source: live              # anthropic only: live (records to the cassette) | replay (cassette, $0)
   model: fake-model
-  params: {temperature: 0}
+  params: {temperature: 0, max_tokens: 2048, output_mode: json_schema}
   prompts_dir: prompts
   cassette_path: ../data/cassettes/default.jsonl
-  pricing:                  # USD per million tokens; set from verified prices before paid runs
+  api_key_file: ../.secrets/anthropic_api_key
+  timeout_seconds: 60
+  pricing:                  # fallback USD per million tokens when the model is not in price_table
     input_usd_per_million: 0.0
     output_usd_per_million: 0.0
+  price_table:              # verified 2026-10-19 at platform.claude.com/docs/en/about-claude/pricing
+    claude-sonnet-5-5: {input_usd_per_million: 2.0, output_usd_per_million: 10.0}
+    claude-haiku-5-5: {input_usd_per_million: 0.10, output_usd_per_million: 0.50}
 agents:
   supervisor:
     plan_version: 1

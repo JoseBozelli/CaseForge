@@ -148,6 +148,9 @@ class StructuredCaller:
                 self._budget.before_call(context)
             response = self._reasoner.complete(request)
         except ReasonerError as exc:
+            billed = getattr(exc, "usage", None)
+            if self._budget is not None and billed is not None:
+                self._budget.after_call(context, billed)  # billed failures still count
             record = LlmCallRecord(
                 **base,
                 response_sha256=None,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
 import time
 from collections.abc import Callable
@@ -17,6 +18,7 @@ from caseforge.adapters.simulation_log import SqliteSimulationLog
 from caseforge.agents.single import SingleAgent
 from caseforge.agents.supervisor import Supervisor
 from caseforge.agents.workers import Worker, evidence_worker, policy_worker
+from caseforge.common.errors import ConfigError
 from caseforge.common.hashing import sha256_hex
 from caseforge.engine.graph import EngineDeps, build_case_graph, no_fault
 from caseforge.events.mapping import EventNormalizer
@@ -38,10 +40,11 @@ from caseforge.persistence.ports import RecordConflictError
 from caseforge.persistence.records import ActionLedgerEntry, DecisionOutcomeRecord, LedgerStatus
 from caseforge.persistence.sqlite import SqliteRecordStore
 from caseforge.provenance.manifest import build_run_manifest
+from caseforge.reasoning.claude import ClaudeReasoner, load_api_key
 from caseforge.reasoning.fake import FakeReasoner
 from caseforge.reasoning.models import ModelSpec
 from caseforge.reasoning.ports import Reasoner
-from caseforge.reasoning.replay import Cassette, ReplayReasoner
+from caseforge.reasoning.replay import Cassette, RecordingReasoner, ReplayReasoner
 from caseforge.reasoning.structured import SnapshotWriter, StructuredCaller
 from caseforge.settings.loader import LoadedSettings, load_settings
 from caseforge.simulation.provider import TemplateSimulationProvider
@@ -57,10 +60,27 @@ def _system_clock() -> datetime:
 
 
 def _default_reasoner(loaded: LoadedSettings, base: Path) -> Reasoner:
-    """fake without an injected script: every call fails gracefully (no hidden model)."""
+    """fake without an injected script: every call fails gracefully (no hidden model).
+
+    anthropic: live calls are always recorded to the cassette; replay reads it at no cost.
+    """
     reasoning = loaded.settings.reasoning
     if reasoning.provider == "replay" and reasoning.cassette_path is not None:
         return ReplayReasoner(Cassette(base / reasoning.cassette_path))
+    if reasoning.provider == "anthropic":
+        if reasoning.cassette_path is None:
+            raise ConfigError("the anthropic provider requires reasoning.cassette_path")
+        cassette = Cassette(base / reasoning.cassette_path)
+        if reasoning.source == "replay":
+            return ReplayReasoner(cassette)
+        import anthropic
+
+        client = anthropic.Anthropic(
+            api_key=load_api_key(base / reasoning.api_key_file, os.environ),
+            timeout=reasoning.timeout_seconds,
+            max_retries=2,
+        )
+        return RecordingReasoner(ClaudeReasoner(client), cassette)
     return FakeReasoner({})
 
 
@@ -118,7 +138,9 @@ class Container:
             self._governance_store,
             settings.governance,
             clock=clock,
-            pricing=settings.reasoning.pricing,
+            pricing=settings.reasoning.price_table.get(
+                settings.reasoning.model, settings.reasoning.pricing
+            ),
         )
         self._governed_tools = GovernedTools(
             self.tools, self._guard, budget=self.control_plane, breakers=self.control_plane

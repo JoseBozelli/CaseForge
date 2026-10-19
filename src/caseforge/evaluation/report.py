@@ -75,6 +75,9 @@ class EvaluationReport(_Model):
     config_sha256: str
     git_commit: str | None
     git_dirty: bool | None = None
+    reasoner: str = ""
+    spend_cap_usd: float | None = None
+    stopped_early: bool = False
     created_at: str
     cases: list[CaseResult]
     summary: Summary
@@ -149,6 +152,9 @@ def render_markdown(report: EvaluationReport) -> str:
         f"# Evaluation: {report.label}",
         "",
         f"- Mode: `{report.mode}`",
+        f"- Reasoner: `{report.reasoner}`",
+        f"- Spend cap (USD): {_fmt(report.spend_cap_usd)}"
+        + (" (stopped early: cap reached)" if report.stopped_early else ""),
         f"- Benchmark: `{report.benchmark_id}` v{report.benchmark_version} "
         f"(sha256 `{report.benchmark_sha256[:12]}`)",
         f"- Configuration sha256: `{report.config_sha256[:12]}`",

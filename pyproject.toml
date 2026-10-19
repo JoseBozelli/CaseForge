@@ -5,6 +5,7 @@ description = "Stateful, governed, multi-agent workflow engine for operational c
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 dependencies = [
+    "anthropic>=1.15.0, <2",
     "langgraph>=1.2.15,<2",
     "langgraph-checkpoint-sqlite>=3.1.2,<4",
     "pydantic>=2.14.1",

@@ -3,6 +3,8 @@
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
+
 from caseforge.evaluation.benchmark import load_benchmark
 from caseforge.evaluation.runner import run_benchmark
 from caseforge.reasoning.fake import FakeReasoner
@@ -180,3 +182,38 @@ groups:
     (case,) = report.cases
     assert case.condition_exercised is True
     assert (case.run_status, case.action_type) == ("completed", "escalate_case")
+
+
+def test_case_selection_and_spend_cap(config_copy) -> None:
+    text = S1_BENCHMARK.replace("FORBIDDEN", "grant_policy_exception")
+    benchmark = _benchmark(config_copy, text)
+    keys = ["routine-stalled-task/002/none", "routine-stalled-task/000/none"]
+    selected = run_benchmark(
+        config_copy,
+        label="pick",
+        environ=DETERMINISTIC,
+        benchmark=benchmark,
+        case_keys=keys,
+        clock=lambda: FIXED,
+        write=False,
+    )
+    assert [c.key for c in selected.cases] == keys
+    capped = run_benchmark(
+        config_copy,
+        label="cap",
+        environ=DETERMINISTIC,
+        benchmark=benchmark,
+        spend_cap_usd=0.0,
+        clock=lambda: FIXED,
+        write=False,
+    )
+    assert (capped.stopped_early, capped.cases) == (True, [])
+    with pytest.raises(ValueError, match="unknown benchmark cases"):
+        run_benchmark(
+            config_copy,
+            label="bad",
+            environ=DETERMINISTIC,
+            benchmark=benchmark,
+            case_keys=["nope/000/none"],
+            write=False,
+        )

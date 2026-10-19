@@ -53,3 +53,11 @@ class CallBudget(Protocol):
 
 class CircuitOpen(ReasonerError):
     """A model call was refused because the reasoner's circuit breaker is open."""
+
+
+class BilledReasonerError(ReasonerError):
+    """The provider billed the call but returned no usable output; carries the usage."""
+
+    def __init__(self, message: str, usage: TokenUsage) -> None:
+        super().__init__(message)
+        self.usage = usage
