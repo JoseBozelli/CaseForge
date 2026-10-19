@@ -74,6 +74,7 @@ class EvaluationReport(_Model):
     benchmark_sha256: str
     config_sha256: str
     git_commit: str | None
+    git_dirty: bool | None = None
     created_at: str
     cases: list[CaseResult]
     summary: Summary
@@ -132,8 +133,9 @@ def write_report(report: EvaluationReport, results_dir: Path) -> tuple[Path, Pat
     json_path.write_text(
         json.dumps(report.model_dump(mode="json"), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
-    md_path.write_text(render_markdown(report), encoding="utf-8")
+    md_path.write_text(render_markdown(report), encoding="utf-8", newline="\n")
     return json_path, md_path
 
 
@@ -150,7 +152,8 @@ def render_markdown(report: EvaluationReport) -> str:
         f"- Benchmark: `{report.benchmark_id}` v{report.benchmark_version} "
         f"(sha256 `{report.benchmark_sha256[:12]}`)",
         f"- Configuration sha256: `{report.config_sha256[:12]}`",
-        f"- Git commit: `{(report.git_commit or 'unknown')[:12]}`",
+        f"- Git commit: `{(report.git_commit or 'unknown')[:12]}`"
+        + (" (uncommitted changes present)" if report.git_dirty else ""),
         "- Outcomes are synthetic: they measure decisions inside the simulator, "
         "not real-world effects.",
         "",
@@ -187,7 +190,7 @@ def render_markdown(report: EvaluationReport) -> str:
         r
         for r in report.cases
         if r.run_status == "failed"
-        or r.route_ok is not False
+        or r.route_ok is False
         or r.forbidden_executed
         or r.unauthorized_executed
         or r.duplicate_execution

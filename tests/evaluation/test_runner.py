@@ -100,7 +100,10 @@ def test_rules_baseline_conditions_and_safety_metrics(config_copy) -> None:
         summary.duplicate_executions,
     ) == (0, 0, 0)
     results_dir = config_copy.parent.parent / "eval_results"
-    assert (results_dir / "test-run.json").exists() and (results_dir / "test-run.md").exists()
+    markdown = (results_dir / "test-run.md").read_bytes()
+    assert (results_dir / "test-run.json").exists()
+    assert b"\r\n" not in markdown
+    assert b"## Notable cases\n\nNone." in markdown
 
 
 def test_results_are_deterministic_apart_from_timing(config_copy) -> None:

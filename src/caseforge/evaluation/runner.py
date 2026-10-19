@@ -220,6 +220,7 @@ def run_benchmark(
         )
         for case in cases
     ]
+    git = read_git_state(settings_path.parent.parent)
     report = EvaluationReport(
         label=label,
         mode=settings.engine.mode,
@@ -227,7 +228,8 @@ def run_benchmark(
         benchmark_version=benchmark.version,
         benchmark_sha256=benchmark.sha256,
         config_sha256=sha256_hex(settings.model_dump(mode="json")),
-        git_commit=read_git_state(settings_path.parent.parent).commit,
+        git_commit=git.commit,
+        git_dirty=git.dirty,
         created_at=(clock() if clock else datetime.now(UTC)).isoformat(),
         cases=results,
         summary=summarize(results),
