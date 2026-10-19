@@ -13,7 +13,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 119,
+      "duration_ms": 118,
       "effective_actions": [
         "send_reminder"
       ],
@@ -47,7 +47,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 130,
+      "duration_ms": 135,
       "effective_actions": [
         "send_reminder"
       ],
@@ -115,7 +115,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 101,
+      "duration_ms": 103,
       "effective_actions": [
         "reassign_task"
       ],
@@ -149,7 +149,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 112,
+      "duration_ms": 101,
       "effective_actions": [
         "reassign_task"
       ],
@@ -217,7 +217,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 616,
+      "duration_ms": 619,
       "effective_actions": [
         "send_reminder"
       ],
@@ -251,7 +251,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 1644,
+      "duration_ms": 1645,
       "effective_actions": [
         "send_reminder"
       ],
@@ -283,7 +283,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 110,
+      "duration_ms": 112,
       "effective_actions": [
         "send_reminder"
       ],
@@ -317,7 +317,7 @@
       "decision_correct": false,
       "decision_source": null,
       "duplicate_execution": false,
-      "duration_ms": 96,
+      "duration_ms": 144,
       "effective_actions": [
         "send_reminder"
       ],
@@ -349,7 +349,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 101,
+      "duration_ms": 134,
       "effective_actions": [
         "request_document"
       ],
@@ -383,7 +383,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 106,
+      "duration_ms": 105,
       "effective_actions": [
         "request_document"
       ],
@@ -417,7 +417,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 103,
+      "duration_ms": 105,
       "effective_actions": [
         "send_reminder"
       ],
@@ -451,7 +451,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 101,
+      "duration_ms": 110,
       "effective_actions": [
         "request_document"
       ],
@@ -485,7 +485,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 100,
+      "duration_ms": 112,
       "effective_actions": [
         "send_reminder"
       ],
@@ -519,7 +519,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 115,
+      "duration_ms": 104,
       "effective_actions": [
         "send_reminder"
       ],
@@ -553,7 +553,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 101,
+      "duration_ms": 125,
       "effective_actions": [
         "send_reminder"
       ],
@@ -587,7 +587,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 108,
+      "duration_ms": 109,
       "effective_actions": [
         "send_reminder"
       ],
@@ -621,7 +621,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 108,
+      "duration_ms": 114,
       "effective_actions": [
         "request_document"
       ],
@@ -655,7 +655,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 633,
+      "duration_ms": 624,
       "effective_actions": [
         "request_document"
       ],
@@ -689,7 +689,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 104,
+      "duration_ms": 102,
       "effective_actions": [
         "escalate_case"
       ],
@@ -723,7 +723,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 107,
+      "duration_ms": 120,
       "effective_actions": [
         "escalate_case"
       ],
@@ -757,7 +757,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 102,
+      "duration_ms": 99,
       "effective_actions": [
         "escalate_case"
       ],
@@ -791,7 +791,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 105,
+      "duration_ms": 102,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -825,7 +825,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 102,
+      "duration_ms": 100,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -859,7 +859,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 107,
+      "duration_ms": 102,
       "effective_actions": [
         "escalate_case"
       ],
@@ -893,7 +893,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 132,
+      "duration_ms": 108,
       "effective_actions": [
         "escalate_case"
       ],
@@ -927,7 +927,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 121,
+      "duration_ms": 119,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -961,7 +961,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 104,
+      "duration_ms": 102,
       "effective_actions": [
         "escalate_case"
       ],
@@ -995,7 +995,7 @@
       "decision_correct": false,
       "decision_source": null,
       "duplicate_execution": false,
-      "duration_ms": 95,
+      "duration_ms": 100,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1027,7 +1027,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 108,
+      "duration_ms": 100,
       "effective_actions": [
         "reassign_task"
       ],
@@ -1095,7 +1095,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 103,
+      "duration_ms": 112,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -1129,7 +1129,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 108,
+      "duration_ms": 103,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -1163,7 +1163,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 102,
+      "duration_ms": 107,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -1197,7 +1197,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 109,
+      "duration_ms": 105,
       "effective_actions": [
         "reassign_task"
       ],
@@ -1231,7 +1231,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 106,
+      "duration_ms": 101,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -1265,7 +1265,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 104,
+      "duration_ms": 106,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -1299,7 +1299,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 109,
+      "duration_ms": 102,
       "effective_actions": [
         "reassign_task"
       ],
@@ -1333,7 +1333,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 1641,
+      "duration_ms": 1648,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -1365,7 +1365,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 99,
+      "duration_ms": 100,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1399,7 +1399,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 101,
+      "duration_ms": 113,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1433,7 +1433,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 102,
+      "duration_ms": 106,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1467,7 +1467,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 101,
+      "duration_ms": 103,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1501,7 +1501,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 100,
+      "duration_ms": 104,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1535,7 +1535,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 106,
+      "duration_ms": 103,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1569,7 +1569,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 119,
+      "duration_ms": 102,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1603,7 +1603,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 113,
+      "duration_ms": 115,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1628,9 +1628,10 @@
       "within_budget": true
     }
   ],
-  "config_sha256": "fa9c3f62fe3a19e38ba461d8b62f3420b3352fc8e94dba6651ce7af60ba61688",
-  "created_at": "2026-10-19T18:28:45.351044+00:00",
-  "git_commit": "ce12df7b55f8553108af1a06afe483565006387b",
+  "config_sha256": "1f337818e4e790a58b1ef197be458015d4c3ffd08c34ab32683c2b0a79ea3b63",
+  "created_at": "2026-10-19T18:38:56.919178+00:00",
+  "git_commit": "6ceea3300eed7cb547ee56b8a37ec30b52754e7b",
+  "git_dirty": false,
   "label": "rules-baseline",
   "mode": "deterministic",
   "report_version": "evaluation-report.v1",

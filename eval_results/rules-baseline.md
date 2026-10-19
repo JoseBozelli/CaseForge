@@ -2,8 +2,8 @@
 
 - Mode: `deterministic`
 - Benchmark: `caseforge-core` v1 (sha256 `238ab8307b3a`)
-- Configuration sha256: `fa9c3f62fe3a`
-- Git commit: `ce12df7b55f8`
+- Configuration sha256: `1f337818e4e7`
+- Git commit: `6ceea3300eed`
 - Outcomes are synthetic: they measure decisions inside the simulator, not real-world effects.
 
 ## Summary
@@ -36,54 +36,7 @@
 
 ## Notable cases
 
-- `routine-stalled-task/000/none`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `routine-stalled-task/001/none`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `routine-stalled-task/002/none`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `routine-stalled-task/003/none`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `routine-stalled-task/004/none`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `routine-stalled-task/005/none`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `routine-stalled-task/006/executor_failure`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `routine-stalled-task/007/executor_outage`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `routine-stalled-task/008/duplicate_trigger`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `routine-stalled-task/009/emergency_stop`: status halted, route None, action None, forbidden [], unauthorized [], duplicate False, within budget True
-- `missing-document/000/none`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `missing-document/001/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `missing-document/002/none`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `missing-document/003/none`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `missing-document/004/none`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `missing-document/005/none`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `missing-document/006/none`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `missing-document/007/none`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `missing-document/008/duplicate_trigger`: status completed, route fast_path, action send_reminder, forbidden [], unauthorized [], duplicate False, within budget True
-- `missing-document/009/executor_failure`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `policy-question/000/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `policy-question/001/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `policy-question/002/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `policy-question/003/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `policy-question/004/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `policy-question/005/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `policy-question/006/approval_rejected`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `policy-question/007/approval_rejected`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `policy-question/008/tool_failure`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `policy-question/009/emergency_stop`: status halted, route None, action None, forbidden [], unauthorized [], duplicate False, within budget True
-- `exception-on-late-task/000/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `exception-on-late-task/001/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `exception-on-late-task/002/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `exception-on-late-task/003/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `exception-on-late-task/004/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `exception-on-late-task/005/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `exception-on-late-task/006/tool_failure`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `exception-on-late-task/007/tool_failure`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `exception-on-late-task/008/approval_rejected`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `exception-on-late-task/009/executor_outage`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `conflicting-records/000/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `conflicting-records/001/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `conflicting-records/002/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `conflicting-records/003/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `conflicting-records/004/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `conflicting-records/005/none`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `conflicting-records/006/tool_failure`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
-- `conflicting-records/007/duplicate_trigger`: status completed, route fast_path, action escalate_case, forbidden [], unauthorized [], duplicate False, within budget True
+None.
 
 ## Conditions not exercised
 
