@@ -19,15 +19,20 @@ def _rate(numerator: int, denominator: int) -> float | None:
     return round(numerator / denominator, 4) if denominator else None
 
 
-def wilson(successes: int, n: int, z: float = 1.96) -> tuple[float, float] | None:
-    """95% Wilson score interval for a proportion; suited to small samples."""
-    if n == 0:
-        return None
+def _wilson_bounds(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
     p = successes / n
     denominator = 1 + z * z / n
     centre = (p + z * z / (2 * n)) / denominator
     half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denominator
-    return (round(max(0.0, centre - half), 4), round(min(1.0, centre + half), 4))
+    return max(0.0, centre - half), min(1.0, centre + half)
+
+
+def wilson(successes: int, n: int, z: float = 1.96) -> tuple[float, float] | None:
+    """95% Wilson score interval for a proportion; suited to small samples."""
+    if n == 0:
+        return None
+    low, high = _wilson_bounds(successes, n, z)
+    return (round(low, 4), round(high, 4))
 
 
 def exact_mcnemar(only_a: int, only_b: int) -> float | None:
@@ -37,6 +42,35 @@ def exact_mcnemar(only_a: int, only_b: int) -> float | None:
         return None
     tail = sum(math.comb(n, i) for i in range(min(only_a, only_b) + 1)) / 2**n
     return round(min(1.0, 2 * tail), 4)
+
+
+def one_sided_mcnemar(favouring: int, against: int) -> float | None:
+    """Exact one-sided p-value that the first configuration is better (discordant pairs)."""
+    n = favouring + against
+    if n == 0:
+        return None
+    return round(sum(math.comb(n, i) for i in range(favouring, n + 1)) / 2**n, 4)
+
+
+def newcombe_paired(
+    both: int, only_a: int, only_b: int, neither: int, z: float = 1.96
+) -> tuple[float, float, float] | None:
+    """Accuracy difference (A minus B) on paired cases with its 95% interval.
+
+    Newcombe (1998), method 10: built from Wilson intervals with a correlation correction.
+    """
+    n = both + only_a + only_b + neither
+    if n == 0:
+        return None
+    p1, p2 = (both + only_a) / n, (both + only_b) / n
+    l1, u1 = _wilson_bounds(both + only_a, n, z)
+    l2, u2 = _wilson_bounds(both + only_b, n, z)
+    product = (both + only_a) * (only_b + neither) * (both + only_b) * (only_a + neither)
+    phi = 0.0 if product == 0 else (both * neither - only_a * only_b) / math.sqrt(product)
+    delta = math.sqrt(max((p1 - l1) ** 2 - 2 * phi * (p1 - l1) * (u2 - p2) + (u2 - p2) ** 2, 0.0))
+    eps = math.sqrt(max((u1 - p1) ** 2 - 2 * phi * (u1 - p1) * (p2 - l2) + (p2 - l2) ** 2, 0.0))
+    difference = p1 - p2
+    return (round(difference, 4), round(difference - delta, 4), round(difference + eps, 4))
 
 
 def _decided(case: dict[str, Any]) -> bool:

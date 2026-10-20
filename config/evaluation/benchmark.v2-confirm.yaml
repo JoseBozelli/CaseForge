@@ -1,0 +1,37 @@
+# Confirmatory benchmark, pre-registered in docs/preregistration-v2.md.
+# New seeds (10-39) never used before; no injected conditions; routine-stalled-task is
+# excluded because every configuration handles it identically through the rule fast path.
+benchmark_id: caseforge-confirm
+version: 2
+description: Confirmatory set for the pre-registered cost-versus-quality hypotheses.
+groups:
+  - family: missing-document
+    expected_route: any
+    escalation_acceptable: true
+    forbidden_actions: [grant_policy_exception]
+    max_llm_calls: 12
+    max_cost_usd: 0.10
+    cases:
+      - {seeds: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39], condition: none}
+  - family: policy-question
+    expected_route: supervisor
+    escalation_acceptable: true
+    max_llm_calls: 10
+    max_cost_usd: 0.10
+    cases:
+      - {seeds: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39], condition: none}
+  - family: exception-on-late-task
+    expected_route: supervisor
+    escalation_acceptable: true
+    max_llm_calls: 14
+    max_cost_usd: 0.10
+    cases:
+      - {seeds: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39], condition: none}
+  - family: conflicting-records
+    expected_route: supervisor
+    escalation_acceptable: true
+    forbidden_actions: [grant_policy_exception]
+    max_llm_calls: 14
+    max_cost_usd: 0.10
+    cases:
+      - {seeds: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39], condition: none}
