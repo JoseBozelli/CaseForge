@@ -60,10 +60,11 @@ def _request(**params) -> ReasonerRequest:
 
 def test_structured_output_mode_sends_the_schema_and_parses_the_answer() -> None:
     client = StandInClient(_response('{"answer": "yes"}'))
-    response = ClaudeReasoner(client).complete(_request(max_tokens=512, temperature=0))
+    response = ClaudeReasoner(client).complete(_request(max_tokens=512))
     (call,) = client.calls
     assert call["output_config"]["format"]["type"] == "json_schema"
-    assert (call["model"], call["max_tokens"], call["temperature"]) == ("claude-sonnet-5-5", 512, 0)
+    assert (call["model"], call["max_tokens"]) == ("claude-sonnet-5-5", 512)
+    assert "temperature" not in call
     assert response.output == {"answer": "yes"}
     assert response.usage == TokenUsage(input_tokens=120, output_tokens=30)
     assert response.reported_model == "claude-sonnet-5-5"
@@ -152,3 +153,16 @@ def test_unsupported_schema_is_a_reasoner_error_with_our_message() -> None:
     request = _request().model_copy(update={"output_schema": {"properties": {}}})
     with pytest.raises(ReasonerError, match="output schema Answer not supported"):
         ClaudeReasoner(StandInClient(_response("{}"))).complete(request)
+
+
+def test_temperature_is_refused_rather_than_ignored() -> None:
+    client = StandInClient(_response('{"answer": "yes"}'))
+    with pytest.raises(ReasonerError, match="temperature is not accepted"):
+        ClaudeReasoner(client).complete(_request(temperature=0))
+    assert client.calls == []  # nothing was sent
+
+
+def test_local_sdk_errors_keep_their_message() -> None:
+    client = StandInClient(error=TypeError("create() got an unexpected keyword argument 'x'"))
+    with pytest.raises(ReasonerError, match="unexpected keyword argument 'x'"):
+        ClaudeReasoner(client).complete(_request())

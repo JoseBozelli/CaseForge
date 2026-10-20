@@ -72,8 +72,10 @@ class ClaudeReasoner:
             "model": request.model.model,
             "max_tokens": int(params.get("max_tokens", 2048)),
         }
-        if "temperature" in params:
-            kwargs["temperature"] = params["temperature"]
+        if "temperature" in params:  # refuse rather than silently ignore a configured option
+            raise ReasonerError(
+                "temperature is not accepted by this Claude API; remove it from reasoning.params"
+            )
         if mode == "json_schema":
             try:
                 schema = _api_schema(request.output_schema)
@@ -93,6 +95,10 @@ class ClaudeReasoner:
 
         try:
             response = self._client.messages.create(**kwargs)
+        except (TypeError, ValueError) as exc:  # raised locally by the SDK before sending
+            raise ReasonerError(
+                f"Claude request rejected by the SDK ({type(exc).__name__}: {exc})"
+            ) from None
         except Exception as exc:  # never surface provider text: it may echo request data
             raise ReasonerError(f"Claude API call failed ({type(exc).__name__})") from None
 
