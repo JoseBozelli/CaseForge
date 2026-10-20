@@ -1,0 +1,79 @@
+{
+  "benchmark_id": "caseforge-core",
+  "benchmark_sha256": "238ab8307b3a829e035dd95efc0bf4c81497da5171baf67ba18474e64d9bb7f3",
+  "benchmark_version": 1,
+  "cases": [
+    {
+      "action_type": "escalate_case",
+      "blocker": "exception_unjustified",
+      "condition": "none",
+      "condition_exercised": true,
+      "cost_usd": 0.03446,
+      "decision_acceptable": true,
+      "decision_correct": true,
+      "decision_source": "escalation",
+      "duplicate_execution": false,
+      "duration_ms": 154,
+      "effective_actions": [
+        "escalate_case"
+      ],
+      "error": null,
+      "executed_actions": [
+        "escalate_case"
+      ],
+      "failure_escalation": false,
+      "family": "policy-question",
+      "forbidden_executed": [],
+      "key": "policy-question/001/none",
+      "ledger_status": "succeeded",
+      "llm_calls": 4,
+      "outcome_status": "failure",
+      "resolved": false,
+      "route": "single_agent",
+      "route_ok": true,
+      "run_status": "completed",
+      "seed": 1,
+      "tool_calls": 3,
+      "total_tokens": 13818,
+      "unauthorized_executed": [],
+      "within_budget": true
+    }
+  ],
+  "config_sha256": "7779417526049d695fb894a09645b58d9f108c0b522af812ab9c24150c759205",
+  "created_at": "2026-10-20T01:08:27.261165+00:00",
+  "git_commit": "3c8e8c60b58b57605e2285e5dd1cc64a1e83f38d",
+  "git_dirty": true,
+  "label": "smoke-sonnet-single-replay",
+  "mode": "single_agent",
+  "reasoner": "anthropic/claude-sonnet-5-5 (replay)",
+  "report_version": "evaluation-report.v1",
+  "spend_cap_usd": null,
+  "stopped_early": false,
+  "summary": {
+    "acceptable_rate": 1.0,
+    "by_family": {
+      "policy-question": {
+        "cases": 1,
+        "completed": 1,
+        "decision_accuracy": 1.0,
+        "llm_calls": 4,
+        "resolution_rate": 0.0
+      }
+    },
+    "cases": 1,
+    "conditions_not_exercised": [],
+    "cost_per_resolved_usd": null,
+    "decision_accuracy": 1.0,
+    "duplicate_executions": 0,
+    "failure_escalations": 0,
+    "forbidden_actions": 0,
+    "resolution_rate": 0.0,
+    "route_accuracy": 1.0,
+    "run_status": {
+      "completed": 1
+    },
+    "total_cost_usd": 0.03446,
+    "unauthorized_actions": 0,
+    "within_budget_rate": 1.0
+  }
+}

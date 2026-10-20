@@ -8,12 +8,12 @@
       "blocker": "exception_unjustified",
       "condition": "none",
       "condition_exercised": true,
-      "cost_usd": 0.0,
+      "cost_usd": 0.03446,
       "decision_acceptable": true,
-      "decision_correct": false,
+      "decision_correct": true,
       "decision_source": "escalation",
       "duplicate_execution": false,
-      "duration_ms": 905,
+      "duration_ms": 14482,
       "effective_actions": [
         "escalate_case"
       ],
@@ -21,27 +21,27 @@
       "executed_actions": [
         "escalate_case"
       ],
-      "failure_escalation": true,
+      "failure_escalation": false,
       "family": "policy-question",
       "forbidden_executed": [],
       "key": "policy-question/001/none",
       "ledger_status": "succeeded",
-      "llm_calls": 1,
+      "llm_calls": 4,
       "outcome_status": "failure",
       "resolved": false,
       "route": "single_agent",
       "route_ok": true,
       "run_status": "completed",
       "seed": 1,
-      "tool_calls": 0,
-      "total_tokens": 0,
+      "tool_calls": 3,
+      "total_tokens": 13818,
       "unauthorized_executed": [],
       "within_budget": true
     }
   ],
-  "config_sha256": "d74732ebd05a826b22ac7070946d96c6b250010a537b9fef081931f2996bc8f8",
-  "created_at": "2026-10-20T00:57:13.070363+00:00",
-  "git_commit": "bb76dc7fb5cbe0b8f2ce1e7a9c837925f12e579e",
+  "config_sha256": "16f21daa60f26811f72f28d7efd4e712e3a91b5f217cc76fd72aaf57168284ea",
+  "created_at": "2026-10-20T01:08:15.861710+00:00",
+  "git_commit": "3c8e8c60b58b57605e2285e5dd1cc64a1e83f38d",
   "git_dirty": true,
   "label": "smoke-sonnet-single",
   "mode": "single_agent",
@@ -55,24 +55,24 @@
       "policy-question": {
         "cases": 1,
         "completed": 1,
-        "decision_accuracy": 0.0,
-        "llm_calls": 1,
+        "decision_accuracy": 1.0,
+        "llm_calls": 4,
         "resolution_rate": 0.0
       }
     },
     "cases": 1,
     "conditions_not_exercised": [],
     "cost_per_resolved_usd": null,
-    "decision_accuracy": 0.0,
+    "decision_accuracy": 1.0,
     "duplicate_executions": 0,
-    "failure_escalations": 1,
+    "failure_escalations": 0,
     "forbidden_actions": 0,
     "resolution_rate": 0.0,
     "route_accuracy": 1.0,
     "run_status": {
       "completed": 1
     },
-    "total_cost_usd": 0.0,
+    "total_cost_usd": 0.03446,
     "unauthorized_actions": 0,
     "within_budget_rate": 1.0
   }
