@@ -13,7 +13,14 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from caseforge.evaluation.compare import metrics, newcombe_paired, one_sided_mcnemar, paired
+from caseforge.evaluation.compare import (
+    exact_mcnemar,
+    format_p,
+    metrics,
+    newcombe_paired,
+    one_sided_mcnemar,
+    paired,
+)
 
 ALPHA = 0.025  # per hypothesis (Bonferroni over two primary hypotheses, one-sided)
 MARGIN = 0.10  # non-inferiority margin in accuracy (10 percentage points)
@@ -118,6 +125,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     (results / f"{args.name}.md").write_text(render(result), encoding="utf-8", newline="\n")
     print(result["decision"])
     return 0
+
+
+def test_tiny_p_values_are_never_shown_as_zero() -> None:
+    assert format_p(exact_mcnemar(21, 0)) == "< 0.0001"
+    assert format_p(None) == "n/a"
 
 
 if __name__ == "__main__":

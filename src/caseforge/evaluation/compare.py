@@ -73,6 +73,13 @@ def newcombe_paired(
     return (round(difference, 4), round(difference - delta, 4), round(difference + eps, 4))
 
 
+def format_p(value: float | None) -> str:
+    """p-values are rounded to 4 decimals; anything that rounds below that shows as < 0.0001."""
+    if value is None:
+        return "n/a"
+    return "< 0.0001" if value < 0.0001 else str(value)
+
+
 def _decided(case: dict[str, Any]) -> bool:
     return case["run_status"] == "completed" and case.get("action_type") is not None
 
@@ -230,7 +237,7 @@ def render_markdown(name: str, result: dict[str, Any]) -> str:
             f"- Cases decided by both: {pair['cases']}",
             f"- Both correct {pair['both']}, only {pair['a']} {pair['only_a']}, "
             f"only {pair['b']} {pair['only_b']}, neither {pair['neither']}",
-            f"- Exact McNemar p-value: {_fmt(pair['p_value'])}",
+            f"- Exact McNemar p-value: {format_p(pair['p_value'])}",
             "",
         ]
         if pair["disagreements"]:
@@ -292,7 +299,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     for pair in result["pairs"]:
         print(
             f"{pair['a']} vs {pair['b']}: only-a {pair['only_a']}, only-b {pair['only_b']}, "
-            f"p={_fmt(pair['p_value'])}"
+            f"p={format_p(pair['p_value'])}"
         )
     return 0
 
