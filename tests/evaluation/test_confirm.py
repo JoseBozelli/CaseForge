@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from caseforge.evaluation.benchmark import load_benchmark
-from caseforge.evaluation.compare import newcombe_paired, one_sided_mcnemar
+from caseforge.evaluation.compare import exact_mcnemar, format_p, newcombe_paired, one_sided_mcnemar
 from caseforge.evaluation.confirm import analyse
 from caseforge.settings.loader import load_settings
 
@@ -75,3 +75,8 @@ def test_confirmatory_benchmark_has_120_new_unconditioned_cases() -> None:
     assert len(benchmark.cases) == 120
     assert {c.condition for c in benchmark.cases} == {"none"}
     assert min(c.seed for c in benchmark.cases) == 10
+
+
+def test_tiny_p_values_are_never_shown_as_zero() -> None:
+    assert format_p(exact_mcnemar(21, 0)) == "< 0.0001"
+    assert format_p(None) == "n/a"
