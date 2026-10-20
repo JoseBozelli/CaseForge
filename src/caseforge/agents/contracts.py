@@ -156,7 +156,7 @@ class Synthesis(_Strict):
     rationale: str = Field(min_length=1, max_length=300)
     candidate_actions: tuple[Name, ...] = ()
     proposal: ActionProposal | None = None
-    escalation_reason: str | None = Field(default=None, min_length=1, max_length=500)
+    escalation_reason: str | None = Field(default=None, min_length=1, max_length=1500)
     clarification: Clarification | None = None
 
     @model_validator(mode="after")

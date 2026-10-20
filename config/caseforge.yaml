@@ -59,12 +59,12 @@ reasoning:
 agents:
   supervisor:
     plan_version: 1
-    synthesis_version: 1
+    synthesis_version: 2
     max_clarification_rounds: 1
     allowed_actions: [send_reminder, request_document, reassign_task, escalate_case, grant_policy_exception]
   evidence: {prompt_version: 1, max_steps: 4}
   policy: {prompt_version: 1, max_steps: 3}
-  single: {prompt_version: 1, max_steps: 6}
+  single: {prompt_version: 2, max_steps: 6}
 engine:
   mode: hierarchical        # deterministic (rules only) | hierarchical (rule fast path, then agents) | single_agent
   escalation_action: escalate_case

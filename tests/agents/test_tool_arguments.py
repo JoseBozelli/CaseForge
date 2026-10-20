@@ -32,3 +32,13 @@ def test_arguments_must_decode_to_an_object(bad: str) -> None:
 )
 def test_every_agent_contract_is_accepted_by_structured_outputs(model) -> None:
     transform_schema(model.model_json_schema())  # raises if the schema is not expressible
+
+
+def test_escalation_reason_allows_a_thorough_explanation() -> None:
+    reason = "x" * 1200
+    synthesis = Synthesis(
+        decision="escalate", rationale="Needs a person.", escalation_reason=reason
+    )
+    assert len(synthesis.escalation_reason) == 1200
+    with pytest.raises(ValidationError):
+        Synthesis(decision="escalate", rationale="Too long.", escalation_reason="x" * 1501)
