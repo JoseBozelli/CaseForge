@@ -142,7 +142,7 @@ def cases_page(svc: DemoService, operator: str) -> None:
                 key="model",
                 disabled=mode == "deterministic",
             )
-            if st.button("Start", key="start", type="primary", use_container_width=True):
+            if st.button("Start", key="start", type="primary", width="stretch"):
                 case = next(c for c in cases if c["key"] == key)
                 run = attempt(
                     svc.start_run, family=case["family"], seed=case["seed"], mode=mode, model=model
@@ -200,11 +200,11 @@ def governance_page(svc: DemoService, operator: str) -> None:
             {"resource": r, **(b or {"state": "closed (unused)"})}
             for r, b in gov["breakers"].items()
         ],
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
     st.markdown("#### Recent audit entries")
-    st.dataframe(list(reversed(gov["audit"])), use_container_width=True, hide_index=True)
+    st.dataframe(list(reversed(gov["audit"])), width="stretch", hide_index=True)
 
 
 def evaluation_page(svc: DemoService) -> None:
@@ -223,7 +223,7 @@ def evaluation_page(svc: DemoService) -> None:
             with col:
                 html(card(label, m["decision_accuracy"], f"95% CI {m['accuracy_ci95']}"))
         st.markdown("#### Paired comparisons (exact McNemar)")
-        st.dataframe(comparison["pairs"], use_container_width=True, hide_index=True)
+        st.dataframe(comparison["pairs"], width="stretch", hide_index=True)
     st.markdown("#### All reports")
     st.dataframe(
         [
@@ -238,7 +238,7 @@ def evaluation_page(svc: DemoService) -> None:
             }
             for r in ev["reports"]
         ],
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
