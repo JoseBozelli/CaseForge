@@ -63,7 +63,7 @@ Cases excluded from the held-out results (development cases, plus any post-hoc e
 
 - Cases decided by both: 120
 - Both correct 54, only confirm-v2-rules 1, only confirm-v2-sonnet-single 20, neither 45
-- Exact McNemar p-value: 0.0
+- Exact McNemar p-value: < 0.0001
 
 | Case | confirm-v2-rules | confirm-v2-sonnet-single | Effective |
 |---|---|---|---|
@@ -106,7 +106,7 @@ Cases excluded from the held-out results (development cases, plus any post-hoc e
 
 - Cases decided by both: 120
 - Both correct 53, only confirm-v2-haiku-hierarchical 1, only confirm-v2-sonnet-single 21, neither 45
-- Exact McNemar p-value: 0.0
+- Exact McNemar p-value: < 0.0001
 
 | Case | confirm-v2-haiku-hierarchical | confirm-v2-sonnet-single | Effective |
 |---|---|---|---|

@@ -101,8 +101,8 @@ configurations made identical decisions on routine cases, which rules handle at 
 2. **No evidence that the hierarchy improves accuracy with Sonnet,** at about 50% higher
    cost per agent-path case. The hierarchy never decided a case correctly that the single
    agent missed.
-3. **Model and architecture appear to interact (exploratory).** With Haiku, the single
-   agent performed at rules level, mainly because it requested documents on three
+3. **Model and architecture appeared to interact (exploratory; not replicated, see the confirmatory study below).**   
+   With Haiku, the single agent performed at rules level, mainly because it requested documents on three
    conflicting-record cases that called for escalation. The Haiku hierarchy decided all
    three correctly and came close to the Sonnet hierarchy at about one fifteenth of the
    cost. Decomposition may compensate for a weaker model; the differences are not
@@ -131,13 +131,44 @@ the single-vs-hierarchy difference shrinks to 2-0 (p = 0.5). The conclusions are
 the single agent outperforms rules, and no accuracy difference between the two agent
 architectures is established.
 
+## Confirmatory study (pre-registered)
+
+The exploratory results above suggested the Haiku hierarchy might approach the Sonnet single
+agent at about a tenth of the cost. This was tested on 120 new cases (seeds 10-39 in the four
+agent-relevant families, no injected conditions), with hypotheses, tests, spend caps and the
+decision rule registered before any run (`docs/preregistration-v2.md`, tag `prereg-v2`). All
+three reports were produced from the tagged commit with a clean working tree.
+
+| Configuration | Decision accuracy | 95% interval | Cost per agent-path case | Live cost |
+|---|---|---|---|---|
+| Rules only | 0.458 | 0.372-0.547 | - | $0.00 |
+| Haiku hierarchy (cheap) | 0.450 | 0.364-0.539 | $0.004 | $0.38 |
+| Sonnet single agent (strong) | 0.617 | 0.527-0.699 | $0.039 | $3.74 |
+
+- **H1 (cheap beats rules): not supported.** Discordant cases 6 vs 7; exact one-sided
+  McNemar p = 0.71.
+- **H2 (cheap within 10 points of strong): not supported.** Accuracy difference -0.167,
+  95% Newcombe interval [-0.234, -0.095]. The interval excludes zero: on these cases the
+  cheap configuration was less accurate than the strong one by roughly 10 to 23 points.
+- **Registered decision:** the strong configuration remains recommended.
+
+**Secondary, descriptive (not registered):** the Sonnet single agent was correct on 20 cases
+where rules failed and wrong on 1 where rules succeeded (exact two-sided McNemar p < 0.0001),
+consistent with the planned benchmark v1 result. All 360 runs recorded zero actions without
+required approval, zero forbidden actions and zero duplicate executions.
+
+**Interpretation.** The exploratory indication for the Haiku hierarchy did not replicate on
+new cases; the most likely explanation is chance in a small exploratory comparison selected
+because it looked interesting. The recommended configuration for this workload is the Sonnet
+single agent, at about $0.04 per agent-handled case.
+
 ## Reproducibility and cost
 
 All live responses are recorded; replaying the benchmark tapes reproduced every reported
-figure exactly. Live spend for the whole evaluation was about US$4.38: development runs
-(smoke test and three pilots) about $1.09, the Sonnet benchmark $3.10, and the Haiku
-benchmark $0.19. The configuration fingerprint is stable across processes; reports record
-the benchmark hash, configuration hash, and git commit.
+figure exactly. Live spend for the whole evaluation was about US$8.51: the confirmatory 
+study $4.13, development runs (smoke test and three pilots) about $1.09, the Sonnet benchmark 
+$3.10, and the Haiku benchmark $0.19. The configuration fingerprint is stable across processes; 
+reports record the benchmark hash, configuration hash, and git commit.
 
 ## Limitations
 
