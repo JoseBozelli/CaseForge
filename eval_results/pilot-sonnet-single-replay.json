@@ -1,0 +1,163 @@
+{
+  "benchmark_id": "caseforge-core",
+  "benchmark_sha256": "238ab8307b3a829e035dd95efc0bf4c81497da5171baf67ba18474e64d9bb7f3",
+  "benchmark_version": 1,
+  "cases": [
+    {
+      "action_type": "escalate_case",
+      "blocker": "exception_unjustified",
+      "condition": "none",
+      "condition_exercised": true,
+      "cost_usd": 0.034668,
+      "decision_acceptable": true,
+      "decision_correct": true,
+      "decision_source": "escalation",
+      "duplicate_execution": false,
+      "duration_ms": 160,
+      "effective_actions": [
+        "escalate_case"
+      ],
+      "error": null,
+      "executed_actions": [
+        "escalate_case"
+      ],
+      "failure_escalation": false,
+      "family": "policy-question",
+      "forbidden_executed": [],
+      "key": "policy-question/001/none",
+      "ledger_status": "succeeded",
+      "llm_calls": 4,
+      "outcome_status": "failure",
+      "resolved": false,
+      "route": "single_agent",
+      "route_ok": true,
+      "run_status": "completed",
+      "seed": 1,
+      "tool_calls": 3,
+      "total_tokens": 13814,
+      "unauthorized_executed": [],
+      "within_budget": true
+    },
+    {
+      "action_type": "escalate_case",
+      "blocker": "extension_warranted",
+      "condition": "none",
+      "condition_exercised": true,
+      "cost_usd": 0.036562,
+      "decision_acceptable": true,
+      "decision_correct": false,
+      "decision_source": "escalation",
+      "duplicate_execution": false,
+      "duration_ms": 137,
+      "effective_actions": [
+        "grant_policy_exception"
+      ],
+      "error": null,
+      "executed_actions": [
+        "escalate_case"
+      ],
+      "failure_escalation": false,
+      "family": "exception-on-late-task",
+      "forbidden_executed": [],
+      "key": "exception-on-late-task/002/none",
+      "ledger_status": "succeeded",
+      "llm_calls": 4,
+      "outcome_status": "failure",
+      "resolved": false,
+      "route": "single_agent",
+      "route_ok": true,
+      "run_status": "completed",
+      "seed": 2,
+      "tool_calls": 3,
+      "total_tokens": 14945,
+      "unauthorized_executed": [],
+      "within_budget": true
+    },
+    {
+      "action_type": "escalate_case",
+      "blocker": "records_conflict",
+      "condition": "none",
+      "condition_exercised": true,
+      "cost_usd": 0.036226,
+      "decision_acceptable": true,
+      "decision_correct": true,
+      "decision_source": "escalation",
+      "duplicate_execution": false,
+      "duration_ms": 141,
+      "effective_actions": [
+        "escalate_case"
+      ],
+      "error": null,
+      "executed_actions": [
+        "escalate_case"
+      ],
+      "failure_escalation": false,
+      "family": "conflicting-records",
+      "forbidden_executed": [],
+      "key": "conflicting-records/003/none",
+      "ledger_status": "succeeded",
+      "llm_calls": 4,
+      "outcome_status": "success",
+      "resolved": true,
+      "route": "single_agent",
+      "route_ok": true,
+      "run_status": "completed",
+      "seed": 3,
+      "tool_calls": 3,
+      "total_tokens": 14309,
+      "unauthorized_executed": [],
+      "within_budget": true
+    }
+  ],
+  "config_sha256": "6f5e756dd8493b3e767c93c291330e8b72c923ed1826ca5917fed0007c7b48a8",
+  "created_at": "2026-10-20T01:12:27.218392+00:00",
+  "git_commit": "d2102db03b646921bc8841e39caab6ec5c02575a",
+  "git_dirty": true,
+  "label": "pilot-sonnet-single-replay",
+  "mode": "single_agent",
+  "reasoner": "anthropic/claude-sonnet-5-5 (replay)",
+  "report_version": "evaluation-report.v1",
+  "spend_cap_usd": null,
+  "stopped_early": false,
+  "summary": {
+    "acceptable_rate": 1.0,
+    "by_family": {
+      "conflicting-records": {
+        "cases": 1,
+        "completed": 1,
+        "decision_accuracy": 1.0,
+        "llm_calls": 4,
+        "resolution_rate": 1.0
+      },
+      "exception-on-late-task": {
+        "cases": 1,
+        "completed": 1,
+        "decision_accuracy": 0.0,
+        "llm_calls": 4,
+        "resolution_rate": 0.0
+      },
+      "policy-question": {
+        "cases": 1,
+        "completed": 1,
+        "decision_accuracy": 1.0,
+        "llm_calls": 4,
+        "resolution_rate": 0.0
+      }
+    },
+    "cases": 3,
+    "conditions_not_exercised": [],
+    "cost_per_resolved_usd": 0.107456,
+    "decision_accuracy": 0.6667,
+    "duplicate_executions": 0,
+    "failure_escalations": 0,
+    "forbidden_actions": 0,
+    "resolution_rate": 0.3333,
+    "route_accuracy": 1.0,
+    "run_status": {
+      "completed": 3
+    },
+    "total_cost_usd": 0.107456,
+    "unauthorized_actions": 0,
+    "within_budget_rate": 1.0
+  }
+}
