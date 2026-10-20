@@ -5,6 +5,7 @@
   "cases": [
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "reminder_needed",
       "condition": "none",
       "condition_exercised": true,
@@ -13,7 +14,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 125,
+      "duration_ms": 126,
       "effective_actions": [
         "send_reminder"
       ],
@@ -21,6 +22,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "routine-stalled-task",
       "forbidden_executed": [],
       "key": "routine-stalled-task/000/none",
@@ -35,10 +37,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "reminder_needed",
       "condition": "none",
       "condition_exercised": true,
@@ -47,7 +51,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 140,
+      "duration_ms": 173,
       "effective_actions": [
         "send_reminder"
       ],
@@ -55,6 +59,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "routine-stalled-task",
       "forbidden_executed": [],
       "key": "routine-stalled-task/001/none",
@@ -69,10 +74,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "owner_overloaded",
       "condition": "none",
       "condition_exercised": true,
@@ -81,7 +88,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 104,
+      "duration_ms": 113,
       "effective_actions": [
         "reassign_task"
       ],
@@ -89,6 +96,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "routine-stalled-task",
       "forbidden_executed": [],
       "key": "routine-stalled-task/002/none",
@@ -103,10 +111,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "owner_overloaded",
       "condition": "none",
       "condition_exercised": true,
@@ -115,7 +125,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 108,
+      "duration_ms": 116,
       "effective_actions": [
         "reassign_task"
       ],
@@ -123,6 +133,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "routine-stalled-task",
       "forbidden_executed": [],
       "key": "routine-stalled-task/003/none",
@@ -137,10 +148,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "owner_overloaded",
       "condition": "none",
       "condition_exercised": true,
@@ -149,7 +162,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 107,
+      "duration_ms": 111,
       "effective_actions": [
         "reassign_task"
       ],
@@ -157,6 +170,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "routine-stalled-task",
       "forbidden_executed": [],
       "key": "routine-stalled-task/004/none",
@@ -171,10 +185,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "reminder_needed",
       "condition": "none",
       "condition_exercised": true,
@@ -183,7 +199,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 108,
+      "duration_ms": 111,
       "effective_actions": [
         "send_reminder"
       ],
@@ -191,6 +207,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "routine-stalled-task",
       "forbidden_executed": [],
       "key": "routine-stalled-task/005/none",
@@ -205,10 +222,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "reminder_needed",
       "condition": "executor_failure",
       "condition_exercised": true,
@@ -217,7 +236,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 621,
+      "duration_ms": 628,
       "effective_actions": [
         "send_reminder"
       ],
@@ -225,6 +244,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "routine-stalled-task",
       "forbidden_executed": [],
       "key": "routine-stalled-task/006/executor_failure",
@@ -239,10 +259,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "reminder_needed",
       "condition": "executor_outage",
       "condition_exercised": true,
@@ -251,12 +273,13 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 1644,
+      "duration_ms": 1652,
       "effective_actions": [
         "send_reminder"
       ],
       "error": null,
       "executed_actions": [],
+      "failure_escalation": false,
       "family": "routine-stalled-task",
       "forbidden_executed": [],
       "key": "routine-stalled-task/007/executor_outage",
@@ -271,10 +294,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "reminder_needed",
       "condition": "duplicate_trigger",
       "condition_exercised": true,
@@ -283,7 +308,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 120,
+      "duration_ms": 118,
       "effective_actions": [
         "send_reminder"
       ],
@@ -291,6 +316,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "routine-stalled-task",
       "forbidden_executed": [],
       "key": "routine-stalled-task/008/duplicate_trigger",
@@ -305,10 +331,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": null,
+      "approval_requested": false,
       "blocker": "reminder_needed",
       "condition": "emergency_stop",
       "condition_exercised": true,
@@ -317,12 +345,13 @@
       "decision_correct": false,
       "decision_source": null,
       "duplicate_execution": false,
-      "duration_ms": 101,
+      "duration_ms": 103,
       "effective_actions": [
         "send_reminder"
       ],
       "error": null,
       "executed_actions": [],
+      "failure_escalation": false,
       "family": "routine-stalled-task",
       "forbidden_executed": [],
       "key": "routine-stalled-task/009/emergency_stop",
@@ -337,10 +366,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "wrong_document",
       "condition": "none",
       "condition_exercised": true,
@@ -349,7 +380,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 104,
+      "duration_ms": 111,
       "effective_actions": [
         "request_document"
       ],
@@ -357,6 +388,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "missing-document",
       "forbidden_executed": [],
       "key": "missing-document/000/none",
@@ -371,10 +403,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "wrong_document",
       "condition": "none",
       "condition_exercised": true,
@@ -383,7 +417,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 104,
+      "duration_ms": 108,
       "effective_actions": [
         "request_document"
       ],
@@ -391,6 +425,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "missing-document",
       "forbidden_executed": [],
       "key": "missing-document/001/none",
@@ -405,10 +440,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "request_overlooked",
       "condition": "none",
       "condition_exercised": true,
@@ -417,7 +454,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 120,
+      "duration_ms": 109,
       "effective_actions": [
         "send_reminder"
       ],
@@ -425,6 +462,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "missing-document",
       "forbidden_executed": [],
       "key": "missing-document/002/none",
@@ -439,10 +477,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "wrong_document",
       "condition": "none",
       "condition_exercised": true,
@@ -451,7 +491,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 104,
+      "duration_ms": 110,
       "effective_actions": [
         "request_document"
       ],
@@ -459,6 +499,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "missing-document",
       "forbidden_executed": [],
       "key": "missing-document/003/none",
@@ -473,10 +514,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "request_overlooked",
       "condition": "none",
       "condition_exercised": true,
@@ -485,7 +528,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 104,
+      "duration_ms": 109,
       "effective_actions": [
         "send_reminder"
       ],
@@ -493,6 +536,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "missing-document",
       "forbidden_executed": [],
       "key": "missing-document/004/none",
@@ -507,10 +551,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "request_overlooked",
       "condition": "none",
       "condition_exercised": true,
@@ -527,6 +573,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "missing-document",
       "forbidden_executed": [],
       "key": "missing-document/005/none",
@@ -541,10 +588,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "request_overlooked",
       "condition": "none",
       "condition_exercised": true,
@@ -553,7 +602,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 109,
+      "duration_ms": 108,
       "effective_actions": [
         "send_reminder"
       ],
@@ -561,6 +610,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "missing-document",
       "forbidden_executed": [],
       "key": "missing-document/006/none",
@@ -575,10 +625,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "request_overlooked",
       "condition": "none",
       "condition_exercised": true,
@@ -587,7 +639,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 103,
+      "duration_ms": 128,
       "effective_actions": [
         "send_reminder"
       ],
@@ -595,6 +647,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "missing-document",
       "forbidden_executed": [],
       "key": "missing-document/007/none",
@@ -609,10 +662,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "send_reminder",
+      "approval_requested": false,
       "blocker": "wrong_document",
       "condition": "duplicate_trigger",
       "condition_exercised": true,
@@ -621,7 +676,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 109,
+      "duration_ms": 122,
       "effective_actions": [
         "request_document"
       ],
@@ -629,6 +684,7 @@
       "executed_actions": [
         "send_reminder"
       ],
+      "failure_escalation": false,
       "family": "missing-document",
       "forbidden_executed": [],
       "key": "missing-document/008/duplicate_trigger",
@@ -643,10 +699,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "wrong_document",
       "condition": "executor_failure",
       "condition_exercised": true,
@@ -655,7 +713,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 619,
+      "duration_ms": 645,
       "effective_actions": [
         "request_document"
       ],
@@ -663,6 +721,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "missing-document",
       "forbidden_executed": [],
       "key": "missing-document/009/executor_failure",
@@ -677,10 +736,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "exception_unjustified",
       "condition": "none",
       "condition_exercised": true,
@@ -689,7 +750,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 111,
+      "duration_ms": 108,
       "effective_actions": [
         "escalate_case"
       ],
@@ -697,6 +758,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "policy-question",
       "forbidden_executed": [],
       "key": "policy-question/000/none",
@@ -711,10 +773,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "exception_unjustified",
       "condition": "none",
       "condition_exercised": true,
@@ -723,7 +787,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 103,
+      "duration_ms": 106,
       "effective_actions": [
         "escalate_case"
       ],
@@ -731,6 +795,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "policy-question",
       "forbidden_executed": [],
       "key": "policy-question/001/none",
@@ -745,10 +810,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "exception_unjustified",
       "condition": "none",
       "condition_exercised": true,
@@ -757,7 +824,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 99,
+      "duration_ms": 104,
       "effective_actions": [
         "escalate_case"
       ],
@@ -765,6 +832,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "policy-question",
       "forbidden_executed": [],
       "key": "policy-question/002/none",
@@ -779,10 +847,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "exception_justified",
       "condition": "none",
       "condition_exercised": true,
@@ -791,7 +861,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 101,
+      "duration_ms": 107,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -799,6 +869,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "policy-question",
       "forbidden_executed": [],
       "key": "policy-question/003/none",
@@ -813,10 +884,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "exception_justified",
       "condition": "none",
       "condition_exercised": true,
@@ -825,7 +898,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 102,
+      "duration_ms": 107,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -833,6 +906,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "policy-question",
       "forbidden_executed": [],
       "key": "policy-question/004/none",
@@ -847,10 +921,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "exception_unjustified",
       "condition": "none",
       "condition_exercised": true,
@@ -859,7 +935,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 103,
+      "duration_ms": 106,
       "effective_actions": [
         "escalate_case"
       ],
@@ -867,6 +943,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "policy-question",
       "forbidden_executed": [],
       "key": "policy-question/005/none",
@@ -881,10 +958,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "exception_unjustified",
       "condition": "approval_rejected",
       "condition_exercised": false,
@@ -893,7 +972,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 100,
+      "duration_ms": 106,
       "effective_actions": [
         "escalate_case"
       ],
@@ -901,6 +980,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "policy-question",
       "forbidden_executed": [],
       "key": "policy-question/006/approval_rejected",
@@ -915,10 +995,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "exception_justified",
       "condition": "approval_rejected",
       "condition_exercised": false,
@@ -927,7 +1009,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 117,
+      "duration_ms": 134,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -935,6 +1017,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "policy-question",
       "forbidden_executed": [],
       "key": "policy-question/007/approval_rejected",
@@ -949,10 +1032,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "exception_unjustified",
       "condition": "tool_failure",
       "condition_exercised": false,
@@ -961,7 +1046,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 103,
+      "duration_ms": 105,
       "effective_actions": [
         "escalate_case"
       ],
@@ -969,6 +1054,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "policy-question",
       "forbidden_executed": [],
       "key": "policy-question/008/tool_failure",
@@ -983,10 +1069,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": null,
+      "approval_requested": false,
       "blocker": "exception_unjustified",
       "condition": "emergency_stop",
       "condition_exercised": true,
@@ -995,12 +1083,13 @@
       "decision_correct": false,
       "decision_source": null,
       "duplicate_execution": false,
-      "duration_ms": 97,
+      "duration_ms": 100,
       "effective_actions": [
         "escalate_case"
       ],
       "error": null,
       "executed_actions": [],
+      "failure_escalation": false,
       "family": "policy-question",
       "forbidden_executed": [],
       "key": "policy-question/009/emergency_stop",
@@ -1015,10 +1104,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "owner_overloaded",
       "condition": "none",
       "condition_exercised": true,
@@ -1027,7 +1118,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 102,
+      "duration_ms": 138,
       "effective_actions": [
         "reassign_task"
       ],
@@ -1035,6 +1126,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "exception-on-late-task",
       "forbidden_executed": [],
       "key": "exception-on-late-task/000/none",
@@ -1049,10 +1141,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "owner_overloaded",
       "condition": "none",
       "condition_exercised": true,
@@ -1061,7 +1155,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 109,
+      "duration_ms": 104,
       "effective_actions": [
         "reassign_task"
       ],
@@ -1069,6 +1163,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "exception-on-late-task",
       "forbidden_executed": [],
       "key": "exception-on-late-task/001/none",
@@ -1083,10 +1178,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "extension_warranted",
       "condition": "none",
       "condition_exercised": true,
@@ -1095,7 +1192,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 101,
+      "duration_ms": 112,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -1103,6 +1200,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "exception-on-late-task",
       "forbidden_executed": [],
       "key": "exception-on-late-task/002/none",
@@ -1117,10 +1215,49 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
+      "blocker": "extension_warranted",
+      "condition": "none",
+      "condition_exercised": true,
+      "cost_usd": 0.0,
+      "decision_acceptable": true,
+      "decision_correct": false,
+      "decision_source": "triage",
+      "duplicate_execution": false,
+      "duration_ms": 109,
+      "effective_actions": [
+        "grant_policy_exception"
+      ],
+      "error": null,
+      "executed_actions": [
+        "escalate_case"
+      ],
+      "failure_escalation": false,
+      "family": "exception-on-late-task",
+      "forbidden_executed": [],
+      "key": "exception-on-late-task/003/none",
+      "ledger_status": "succeeded",
+      "llm_calls": 0,
+      "outcome_status": "failure",
+      "resolved": false,
+      "route": "fast_path",
+      "route_ok": null,
+      "run_status": "completed",
+      "seed": 3,
+      "tool_calls": 0,
+      "total_tokens": 0,
+      "unauthorized_executed": [],
+      "within_budget": true,
+      "wrong_approval_request": false
+    },
+    {
+      "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "extension_warranted",
       "condition": "none",
       "condition_exercised": true,
@@ -1137,40 +1274,7 @@
       "executed_actions": [
         "escalate_case"
       ],
-      "family": "exception-on-late-task",
-      "forbidden_executed": [],
-      "key": "exception-on-late-task/003/none",
-      "ledger_status": "succeeded",
-      "llm_calls": 0,
-      "outcome_status": "failure",
-      "resolved": false,
-      "route": "fast_path",
-      "route_ok": null,
-      "run_status": "completed",
-      "seed": 3,
-      "tool_calls": 0,
-      "total_tokens": 0,
-      "unauthorized_executed": [],
-      "within_budget": true
-    },
-    {
-      "action_type": "escalate_case",
-      "blocker": "extension_warranted",
-      "condition": "none",
-      "condition_exercised": true,
-      "cost_usd": 0.0,
-      "decision_acceptable": true,
-      "decision_correct": false,
-      "decision_source": "triage",
-      "duplicate_execution": false,
-      "duration_ms": 103,
-      "effective_actions": [
-        "grant_policy_exception"
-      ],
-      "error": null,
-      "executed_actions": [
-        "escalate_case"
-      ],
+      "failure_escalation": false,
       "family": "exception-on-late-task",
       "forbidden_executed": [],
       "key": "exception-on-late-task/004/none",
@@ -1185,10 +1289,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "owner_overloaded",
       "condition": "none",
       "condition_exercised": true,
@@ -1197,7 +1303,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 119,
+      "duration_ms": 108,
       "effective_actions": [
         "reassign_task"
       ],
@@ -1205,6 +1311,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "exception-on-late-task",
       "forbidden_executed": [],
       "key": "exception-on-late-task/005/none",
@@ -1219,10 +1326,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "extension_warranted",
       "condition": "tool_failure",
       "condition_exercised": false,
@@ -1231,7 +1340,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 102,
+      "duration_ms": 105,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -1239,6 +1348,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "exception-on-late-task",
       "forbidden_executed": [],
       "key": "exception-on-late-task/006/tool_failure",
@@ -1253,10 +1363,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "extension_warranted",
       "condition": "tool_failure",
       "condition_exercised": false,
@@ -1265,7 +1377,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 109,
+      "duration_ms": 113,
       "effective_actions": [
         "grant_policy_exception"
       ],
@@ -1273,6 +1385,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "exception-on-late-task",
       "forbidden_executed": [],
       "key": "exception-on-late-task/007/tool_failure",
@@ -1287,10 +1400,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "owner_overloaded",
       "condition": "approval_rejected",
       "condition_exercised": false,
@@ -1299,7 +1414,7 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 102,
+      "duration_ms": 105,
       "effective_actions": [
         "reassign_task"
       ],
@@ -1307,6 +1422,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "exception-on-late-task",
       "forbidden_executed": [],
       "key": "exception-on-late-task/008/approval_rejected",
@@ -1321,10 +1437,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "extension_warranted",
       "condition": "executor_outage",
       "condition_exercised": true,
@@ -1333,12 +1451,13 @@
       "decision_correct": false,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 1649,
+      "duration_ms": 1645,
       "effective_actions": [
         "grant_policy_exception"
       ],
       "error": null,
       "executed_actions": [],
+      "failure_escalation": false,
       "family": "exception-on-late-task",
       "forbidden_executed": [],
       "key": "exception-on-late-task/009/executor_outage",
@@ -1353,10 +1472,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "records_conflict",
       "condition": "none",
       "condition_exercised": true,
@@ -1365,7 +1486,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 120,
+      "duration_ms": 126,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1373,6 +1494,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "conflicting-records",
       "forbidden_executed": [],
       "key": "conflicting-records/000/none",
@@ -1387,10 +1509,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "records_conflict",
       "condition": "none",
       "condition_exercised": true,
@@ -1399,7 +1523,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 102,
+      "duration_ms": 108,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1407,6 +1531,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "conflicting-records",
       "forbidden_executed": [],
       "key": "conflicting-records/001/none",
@@ -1421,10 +1546,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "records_conflict",
       "condition": "none",
       "condition_exercised": true,
@@ -1441,6 +1568,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "conflicting-records",
       "forbidden_executed": [],
       "key": "conflicting-records/002/none",
@@ -1455,10 +1583,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "records_conflict",
       "condition": "none",
       "condition_exercised": true,
@@ -1467,7 +1597,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 106,
+      "duration_ms": 109,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1475,6 +1605,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "conflicting-records",
       "forbidden_executed": [],
       "key": "conflicting-records/003/none",
@@ -1489,10 +1620,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "records_conflict",
       "condition": "none",
       "condition_exercised": true,
@@ -1509,6 +1642,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "conflicting-records",
       "forbidden_executed": [],
       "key": "conflicting-records/004/none",
@@ -1523,10 +1657,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "records_conflict",
       "condition": "none",
       "condition_exercised": true,
@@ -1535,7 +1671,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 101,
+      "duration_ms": 117,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1543,6 +1679,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "conflicting-records",
       "forbidden_executed": [],
       "key": "conflicting-records/005/none",
@@ -1557,10 +1694,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "records_conflict",
       "condition": "tool_failure",
       "condition_exercised": false,
@@ -1569,7 +1708,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 102,
+      "duration_ms": 104,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1577,6 +1716,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "conflicting-records",
       "forbidden_executed": [],
       "key": "conflicting-records/006/tool_failure",
@@ -1591,10 +1731,12 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     },
     {
       "action_type": "escalate_case",
+      "approval_requested": false,
       "blocker": "records_conflict",
       "condition": "duplicate_trigger",
       "condition_exercised": true,
@@ -1603,7 +1745,7 @@
       "decision_correct": true,
       "decision_source": "triage",
       "duplicate_execution": false,
-      "duration_ms": 111,
+      "duration_ms": 122,
       "effective_actions": [
         "escalate_case"
       ],
@@ -1611,6 +1753,7 @@
       "executed_actions": [
         "escalate_case"
       ],
+      "failure_escalation": false,
       "family": "conflicting-records",
       "forbidden_executed": [],
       "key": "conflicting-records/007/duplicate_trigger",
@@ -1625,18 +1768,23 @@
       "tool_calls": 0,
       "total_tokens": 0,
       "unauthorized_executed": [],
-      "within_budget": true
+      "within_budget": true,
+      "wrong_approval_request": false
     }
   ],
-  "config_sha256": "6872a98858339713a37bb3b4c1d1c73bb7f39854290685bf04f3830f1178f890",
-  "created_at": "2026-10-19T18:49:33.207030+00:00",
-  "git_commit": "ae41a8b12a6622566201a4b4ef4979c31dd397f8",
+  "config_sha256": "0972fc418585f05d58d2e8e563da3d956abded4b686010235da08b671c62fee0",
+  "created_at": "2026-10-20T13:21:16.556710+00:00",
+  "git_commit": "f312b058773e207251abfa852882fe0d2812bcbd",
   "git_dirty": false,
   "label": "rules-baseline",
   "mode": "deterministic",
+  "reasoner": "fake/fake-model",
   "report_version": "evaluation-report.v1",
+  "spend_cap_usd": null,
+  "stopped_early": false,
   "summary": {
     "acceptable_rate": 0.8696,
+    "approval_requests": 0,
     "by_family": {
       "conflicting-records": {
         "cases": 8,
@@ -1687,6 +1835,7 @@
     "cost_per_resolved_usd": 0.0,
     "decision_accuracy": 0.5435,
     "duplicate_executions": 0,
+    "failure_escalations": 0,
     "forbidden_actions": 0,
     "resolution_rate": 0.4348,
     "route_accuracy": null,
@@ -1696,6 +1845,7 @@
     },
     "total_cost_usd": 0.0,
     "unauthorized_actions": 0,
-    "within_budget_rate": 1.0
+    "within_budget_rate": 1.0,
+    "wrong_approval_requests": 0
   }
 }

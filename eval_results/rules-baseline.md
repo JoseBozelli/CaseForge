@@ -1,10 +1,13 @@
 # Evaluation: rules-baseline
 
 - Mode: `deterministic`
+- Reasoner: `fake/fake-model`
+- Spend cap (USD): n/a
 - Benchmark: `caseforge-core` v1 (sha256 `238ab8307b3a`)
-- Configuration sha256: `6872a9885833`
-- Git commit: `ae41a8b12a66`
-- Outcomes are synthetic: they measure decisions inside the simulator, not real-world effects.
+- Configuration sha256: `0972fc418585`
+- Git commit: `f312b058773e`
+- Outcomes are synthetic: they measure decisions inside the simulator, - The evaluation approver approves every request, so wrong approval requests are executed; a real approver might catch them.
+not real-world effects.
 
 ## Summary
 
@@ -19,6 +22,8 @@
 | Unauthorized actions | 0 |
 | Forbidden actions | 0 |
 | Duplicate executions | 0 |
+| Failure escalations (not scored as decisions) | 0 |
+| Approval requests (wrong / total) | 0 / 0 |
 | Conditions not exercised | 7 |
 | Within budget | 1.0 |
 | Total cost (USD) | 0.0 |
