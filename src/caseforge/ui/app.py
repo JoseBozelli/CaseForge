@@ -15,9 +15,16 @@ from fastapi.encoders import jsonable_encoder
 
 from caseforge.api.service import DemoService
 from caseforge.composition import PermissionDenied
+from caseforge.ui.theme import CSS, badge, card, esc, timeline
 
 SETTINGS = os.environ.get("CASEFORGE_SETTINGS", "config/caseforge.yaml")
 MODES = ["single_agent", "hierarchical", "deterministic"]
+MODE_LABELS = {
+    "single_agent": "Single agent",
+    "hierarchical": "Hierarchy",
+    "deterministic": "Rules only",
+}
+PAGES = ["Cases", "Governance", "Evaluation"]
 
 
 @st.cache_resource
@@ -27,6 +34,10 @@ def get_service(settings_path: str) -> DemoService:
 
 def plain(value: Any) -> Any:
     return jsonable_encoder(value)
+
+
+def html(markup: str) -> None:
+    st.markdown(markup, unsafe_allow_html=True)
 
 
 def attempt(action: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
@@ -56,33 +67,42 @@ def action_button(
 
 def show_run(svc: DemoService, run: dict[str, Any], operator: str) -> None:
     run = plain(run)
-    decision = run.get("decision") or {}
-    action = run.get("action") or {}
-    outcome = run.get("outcome") or {}
-    usage = run.get("usage") or {}
-    model = f", {run['model']}" if run.get("model") else ""
-    st.subheader(f"{run['family']} / seed {run['seed']} ({run['mode']}{model})")
+    decision, action = run.get("decision") or {}, run.get("action") or {}
+    outcome, usage = run.get("outcome") or {}, run.get("usage") or {}
+    model = f" · {run['model']}" if run.get("model") else ""
+    html(f"### {esc(run['family'])} · seed {esc(run['seed'])} &nbsp; {badge(run['status'])}")
+    html(f"<p class='cf-muted'>{esc(MODE_LABELS.get(run['mode'], run['mode']))}{esc(model)}</p>")
+
     cols = st.columns(4)
-    cols[0].metric("Status", run["status"])
-    cols[1].metric("Route", run.get("route") or "-")
-    cols[2].metric("Decision", decision.get("action_type") or "-", decision.get("source"))
-    cols[3].metric(
-        "Model calls / cost", f"{usage.get('llm_calls', 0)} / ${usage.get('cost_usd', 0)}"
-    )
-    st.write(
-        f"Ledger: **{action.get('ledger_status', '-')}** · "
-        f"Outcome: **{outcome.get('status', '-')}**"
-    )
+    with cols[0]:
+        html(card("Route", run.get("route") or "-"))
+    with cols[1]:
+        html(card("Decision", decision.get("action_type") or "-", decision.get("source")))
+    with cols[2]:
+        html(
+            card(
+                "Execution",
+                action.get("ledger_status", "-"),
+                f"outcome: {outcome.get('status', '-')}",
+            )
+        )
+    with cols[3]:
+        html(
+            card(
+                "Spend", f"${usage.get('cost_usd', 0)}", f"{usage.get('llm_calls', 0)} model calls"
+            )
+        )
     if decision.get("reason"):
         st.info(f"Escalation reason: {decision['reason']}")
 
+    rid = run["run_id"]
     if run["status"] == "awaiting_approval":
         with st.container(border=True):
             st.markdown("**Approval required**")
-            st.json(run.get("pending_approval"))
-            note = st.text_input("Note", key=f"note-{run['run_id']}")
+            pending = run.get("pending_approval") or {}
+            st.write(f"Proposed action: `{pending.get('action_type', '-')}`")
+            note = st.text_input("Note", key=f"note-{rid}")
             left, right = st.columns(2)
-            rid, note_value = run["run_id"], note or None
             with left:
                 action_button(
                     "Approve",
@@ -90,94 +110,121 @@ def show_run(svc: DemoService, run: dict[str, Any], operator: str) -> None:
                     svc.approve,
                     rid,
                     actor=operator,
-                    note=note_value,
+                    note=note or None,
                     primary=True,
                 )
             with right:
                 action_button(
-                    "Reject", f"reject-{rid}", svc.reject, rid, actor=operator, note=note_value
+                    "Reject", f"reject-{rid}", svc.reject, rid, actor=operator, note=note or None
                 )
     if run["status"] in {"halted", "interrupted"}:
-        action_button("Resume", f"resume-{run['run_id']}", svc.resume, run["run_id"])
-    with st.expander("Decision trace"):
-        st.dataframe(run.get("trace") or [], use_container_width=True)
+        action_button("Resume", f"resume-{rid}", svc.resume, rid, primary=True)
+
+    st.markdown("#### Decision trace")
+    html(timeline(run.get("trace") or []))
     with st.expander("Full run record"):
         st.json(run)
 
 
-def cases_tab(svc: DemoService, operator: str) -> None:
-    left, right = st.columns([1, 2])
+def cases_page(svc: DemoService, operator: str) -> None:
+    left, right = st.columns([1, 2], gap="large")
     with left:
-        st.markdown("**Start a demo case**")
-        cases = svc.demo_cases()
-        key = st.selectbox("Case", [c["key"] for c in cases], key="case")
-        mode = st.radio("Mode", MODES, key="mode", horizontal=True)
-        model = st.selectbox(
-            "Model (recorded answers)",
-            svc.demo_models(),
-            key="model",
-            disabled=mode == "deterministic",
-        )
-        if st.button("Start", key="start", type="primary"):
-            case = next(c for c in cases if c["key"] == key)
-            run = attempt(
-                svc.start_run, family=case["family"], seed=case["seed"], mode=mode, model=model
+        with st.container(border=True):
+            st.markdown("#### Start a demo case")
+            cases = svc.demo_cases()
+            key = st.selectbox("Case", [c["key"] for c in cases], key="case")
+            mode = st.radio(
+                "Mode", MODES, key="mode", horizontal=True, format_func=lambda m: MODE_LABELS[m]
             )
-            if run:
-                st.session_state["run_id"] = run["run_id"]
+            model = st.selectbox(
+                "Model (recorded answers)",
+                svc.demo_models(),
+                key="model",
+                disabled=mode == "deterministic",
+            )
+            if st.button("Start", key="start", type="primary", use_container_width=True):
+                case = next(c for c in cases if c["key"] == key)
+                run = attempt(
+                    svc.start_run, family=case["family"], seed=case["seed"], mode=mode, model=model
+                )
+                if run:
+                    st.session_state["run_id"] = run["run_id"]
         runs = svc.list_runs()
-        st.markdown("**Recent runs**")
-        ids = [r["run_id"] for r in runs]
-        if ids:
-            current = st.session_state.get("run_id")
-            index = ids.index(current) if current in ids else 0
-            st.session_state["run_id"] = st.selectbox("Run", ids, index=index)
+        if runs:
+            with st.container(border=True):
+                st.markdown("#### Recent runs")
+                ids = [r["run_id"] for r in runs]
+                current = st.session_state.get("run_id")
+                index = ids.index(current) if current in ids else 0
+                st.session_state["run_id"] = st.selectbox(
+                    "Run", ids, index=index, label_visibility="collapsed"
+                )
     with right:
         run_id = st.session_state.get("run_id")
-        if run_id:
-            run = attempt(svc.get_run, run_id)
-            if run:
-                show_run(svc, run, operator)
+        run = attempt(svc.get_run, run_id) if run_id else None
+        if run:
+            show_run(svc, run, operator)
         else:
-            st.write("Start a case to see how it is handled.")
+            html(
+                card(
+                    "No run selected",
+                    "Start a demo case",
+                    "Decisions replay recorded model answers.",
+                )
+            )
 
 
-def governance_tab(svc: DemoService, operator: str) -> None:
+def governance_page(svc: DemoService, operator: str) -> None:
     gov = plain(svc.governance())
     stop = gov["emergency_stop"]
-    st.markdown(f"**Emergency stop:** {'ENGAGED' if stop else 'released'}")
-    if stop:
-        st.json(stop)
-        action_button("Release stop", "release", svc.release_stop, actor=operator)
-    else:
-        reason = st.text_input("Reason", key="stop-reason")
-        action_button(
-            "Engage stop",
-            "engage",
-            svc.engage_stop,
-            actor=operator,
-            reason=reason or "operator request",
-            primary=True,
-        )
-    st.markdown("**Circuit breakers**")
+    with st.container(border=True):
+        st.markdown("#### Emergency stop")
+        if stop:
+            reason = esc(stop.get("reason", ""))
+            html(f"{badge('halted')} &nbsp; <span class='cf-muted'>{reason}</span>")
+            action_button("Release stop", "release", svc.release_stop, actor=operator)
+        else:
+            html(f"{badge('completed').replace('completed', 'running')}")
+            reason = st.text_input("Reason", key="stop-reason")
+            action_button(
+                "Engage stop",
+                "engage",
+                svc.engage_stop,
+                actor=operator,
+                reason=reason or "operator request",
+                primary=True,
+            )
+    st.markdown("#### Circuit breakers")
     st.dataframe(
         [
             {"resource": r, **(b or {"state": "closed (unused)"})}
             for r, b in gov["breakers"].items()
         ],
         use_container_width=True,
+        hide_index=True,
     )
-    st.markdown("**Recent audit entries**")
-    st.dataframe(list(reversed(gov["audit"])), use_container_width=True)
+    st.markdown("#### Recent audit entries")
+    st.dataframe(list(reversed(gov["audit"])), use_container_width=True, hide_index=True)
 
 
-def evaluation_tab(svc: DemoService) -> None:
+def evaluation_page(svc: DemoService) -> None:
     ev = plain(svc.evaluation())
     st.caption(
         "Outcomes are synthetic: results measure decisions inside the simulator. "
-        "See docs/evaluation.md for method, findings and limitations."
+        "Method, findings and limitations: docs/evaluation.md."
     )
-    st.markdown("**Reports**")
+    names = [c["name"] for c in ev["comparisons"]]
+    if names:
+        default = names.index("comparison-v1-models") if "comparison-v1-models" in names else 0
+        chosen = st.selectbox("Comparison", names, index=default)
+        comparison = next(c for c in ev["comparisons"] if c["name"] == chosen)
+        cols = st.columns(len(comparison["held_out"]))
+        for col, (label, m) in zip(cols, comparison["held_out"].items(), strict=True):
+            with col:
+                html(card(label, m["decision_accuracy"], f"95% CI {m['accuracy_ci95']}"))
+        st.markdown("#### Paired comparisons (exact McNemar)")
+        st.dataframe(comparison["pairs"], use_container_width=True, hide_index=True)
+    st.markdown("#### All reports")
     st.dataframe(
         [
             {
@@ -187,56 +234,44 @@ def evaluation_tab(svc: DemoService) -> None:
                 "cases": r["summary"].get("cases"),
                 "decision accuracy": r["summary"].get("decision_accuracy"),
                 "resolution rate": r["summary"].get("resolution_rate"),
-                "failure escalations": r["summary"].get("failure_escalations"),
-                "unauthorized": r["summary"].get("unauthorized_actions"),
                 "cost (USD)": r["summary"].get("total_cost_usd"),
             }
             for r in ev["reports"]
         ],
         use_container_width=True,
+        hide_index=True,
     )
-    names = [c["name"] for c in ev["comparisons"]]
-    if names:
-        default = names.index("comparison-v1-models") if "comparison-v1-models" in names else 0
-        chosen = st.selectbox("Comparison", names, index=default)
-        comparison = next(c for c in ev["comparisons"] if c["name"] == chosen)
-        st.markdown("**Held-out results**")
-        st.dataframe(
-            [
-                {
-                    "configuration": label,
-                    "decision accuracy": m["decision_accuracy"],
-                    "95% interval": m["accuracy_ci95"],
-                    "resolution rate": m["resolution_rate"],
-                    "cost per agent case (USD)": m["cost_per_agent_case_usd"],
-                }
-                for label, m in comparison["held_out"].items()
-            ],
-            use_container_width=True,
-        )
-        st.markdown("**Paired comparisons (exact McNemar)**")
-        st.dataframe(comparison["pairs"], use_container_width=True)
 
 
 def main() -> None:
-    st.set_page_config(page_title="CaseForge", layout="wide")
+    st.set_page_config(page_title="CaseForge", page_icon="◆", layout="wide")
+    html(CSS)
     svc = get_service(SETTINGS)
+    stop = plain(svc.governance())["emergency_stop"]
+    with st.sidebar:
+        html(
+            "<div class='cf-brand'>CaseForge</div>"
+            "<div class='cf-muted'>Governed case operations</div>"
+        )
+        st.write("")
+        page = st.radio("Navigate", PAGES, key="page", label_visibility="collapsed")
+        st.divider()
+        operator = st.selectbox("Acting as", svc.operators(), key="operator")
+        if stop:
+            st.error("Emergency stop engaged")
+        else:
+            st.success("Operations running")
+        st.caption(
+            "Demo mode: decisions replay recorded model answers; nothing calls a model. "
+            "Operator identity is simulated; roles are enforced."
+        )
     st.title("CaseForge operator console")
-    st.caption(
-        "Demo mode: agent decisions replay recorded Claude Sonnet 5.5 answers from the "
-        "benchmark. Nothing calls a model or spends money. Operator identity is simulated; "
-        "roles are enforced."
-    )
-    operator = st.sidebar.selectbox("Acting as", svc.operators(), key="operator")
-    if plain(svc.governance())["emergency_stop"]:
-        st.error("Emergency stop engaged: runs halt at the next checkpoint until released.")
-    cases, governance, evaluation = st.tabs(["Cases", "Governance", "Evaluation"])
-    with cases:
-        cases_tab(svc, operator)
-    with governance:
-        governance_tab(svc, operator)
-    with evaluation:
-        evaluation_tab(svc)
+    if page == "Cases":
+        cases_page(svc, operator)
+    elif page == "Governance":
+        governance_page(svc, operator)
+    else:
+        evaluation_page(svc)
 
 
 main()

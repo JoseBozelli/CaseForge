@@ -36,3 +36,11 @@ def test_service_lists_operators_and_runs(config_copy) -> None:
     assert svc.list_runs() == []
     svc.start_run(family="routine-stalled-task", seed=7, mode="deterministic")
     assert [r["family"] for r in svc.list_runs()] == ["routine-stalled-task"]
+
+
+def test_theme_escapes_model_text() -> None:
+    from caseforge.ui.theme import card, timeline
+
+    hostile = "<script>alert(1)</script>"
+    assert "<script>" not in timeline([{"node": "synthesize", "reason": hostile}])
+    assert "<script>" not in card("Decision", hostile, hostile)
