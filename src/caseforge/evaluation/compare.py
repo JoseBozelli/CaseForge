@@ -161,7 +161,8 @@ def render_markdown(name: str, result: dict[str, Any]) -> str:
         "approver approves every request. Intervals are 95% Wilson intervals; paired tests are "
         "exact McNemar tests on cases both architectures decided.",
         "",
-        f"Development cases excluded from the headline: {', '.join(result['dev_cases']) or 'none'}",
+        "Cases excluded from the held-out results (development cases, plus any post-hoc "
+        f"exclusions explained with this report): {', '.join(result['dev_cases']) or 'none'}",
         "",
         "## Held-out cases",
         "",
