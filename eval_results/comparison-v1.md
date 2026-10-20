@@ -2,7 +2,7 @@
 
 Outcomes are synthetic; results measure decisions inside the simulator. The evaluation approver approves every request. Intervals are 95% Wilson intervals; paired tests are exact McNemar tests on cases both architectures decided.
 
-Development cases excluded from the headline: conflicting-records/003/none, exception-on-late-task/002/none, policy-question/001/none
+Cases excluded from the held-out results (development cases, plus any post-hoc exclusions explained with this report): conflicting-records/003/none, exception-on-late-task/002/none, policy-question/001/none
 
 ## Held-out cases
 

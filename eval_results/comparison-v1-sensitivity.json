@@ -1,0 +1,637 @@
+{
+  "architectures": {
+    "bench-v1-sonnet-hierarchical": {
+      "all": {
+        "accuracy_ci95": [
+          0.486,
+          0.7548
+        ],
+        "agent_path_cases": 29,
+        "approval_requests": 0,
+        "cases": 48,
+        "cost_per_agent_case_usd": 0.0644,
+        "cost_per_resolved_usd": 0.0812,
+        "decided": 46,
+        "decision_accuracy": 0.6304,
+        "duplicates": 0,
+        "failure_escalations": 0,
+        "forbidden": 0,
+        "llm_calls": 221,
+        "resolution_rate": 0.5,
+        "total_cost_usd": 1.867912,
+        "unauthorized": 0,
+        "wrong_approval_requests": 0
+      },
+      "benchmark_sha256": "238ab8307b3a829e035dd95efc0bf4c81497da5171baf67ba18474e64d9bb7f3",
+      "by_family": {
+        "conflicting-records": {
+          "accuracy_ci95": [
+            0.6457,
+            1.0
+          ],
+          "agent_path_cases": 7,
+          "approval_requests": 0,
+          "cases": 7,
+          "cost_per_agent_case_usd": 0.0716,
+          "cost_per_resolved_usd": 0.1002,
+          "decided": 7,
+          "decision_accuracy": 1.0,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 58,
+          "resolution_rate": 0.7143,
+          "total_cost_usd": 0.50105,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "exception-on-late-task": {
+          "accuracy_ci95": [
+            0.0968,
+            0.7
+          ],
+          "agent_path_cases": 6,
+          "approval_requests": 0,
+          "cases": 6,
+          "cost_per_agent_case_usd": 0.0672,
+          "cost_per_resolved_usd": 0.1343,
+          "decided": 6,
+          "decision_accuracy": 0.3333,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 48,
+          "resolution_rate": 0.5,
+          "total_cost_usd": 0.40301,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "missing-document": {
+          "accuracy_ci95": [
+            0.3968,
+            0.8922
+          ],
+          "agent_path_cases": 2,
+          "approval_requests": 0,
+          "cases": 10,
+          "cost_per_agent_case_usd": 0.055,
+          "cost_per_resolved_usd": 0.0275,
+          "decided": 10,
+          "decision_accuracy": 0.7,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 13,
+          "resolution_rate": 0.4,
+          "total_cost_usd": 0.11009,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "policy-question": {
+          "accuracy_ci95": [
+            0.4365,
+            0.9699
+          ],
+          "agent_path_cases": 6,
+          "approval_requests": 0,
+          "cases": 7,
+          "cost_per_agent_case_usd": 0.0624,
+          "cost_per_resolved_usd": 0.1249,
+          "decided": 6,
+          "decision_accuracy": 0.8333,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 49,
+          "resolution_rate": 0.5,
+          "total_cost_usd": 0.37468,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "routine-stalled-task": {
+          "accuracy_ci95": [
+            0.3542,
+            0.8794
+          ],
+          "agent_path_cases": 0,
+          "approval_requests": 0,
+          "cases": 10,
+          "cost_per_agent_case_usd": null,
+          "cost_per_resolved_usd": 0.0,
+          "decided": 9,
+          "decision_accuracy": 0.6667,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 0,
+          "resolution_rate": 0.6667,
+          "total_cost_usd": 0.0,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        }
+      },
+      "git_commit": "eb86ae12eb19848df44c5a7e1b256b84a8c0f008",
+      "held_out": {
+        "accuracy_ci95": [
+          0.5524,
+          0.83
+        ],
+        "agent_path_cases": 21,
+        "approval_requests": 0,
+        "cases": 40,
+        "cost_per_agent_case_usd": 0.0661,
+        "cost_per_resolved_usd": 0.0661,
+        "decided": 38,
+        "decision_accuracy": 0.7105,
+        "duplicates": 0,
+        "failure_escalations": 0,
+        "forbidden": 0,
+        "llm_calls": 168,
+        "resolution_rate": 0.5526,
+        "total_cost_usd": 1.38883,
+        "unauthorized": 0,
+        "wrong_approval_requests": 0
+      },
+      "mode": "hierarchical",
+      "reasoner": "anthropic/claude-sonnet-5-5 (live)"
+    },
+    "bench-v1-sonnet-single": {
+      "all": {
+        "accuracy_ci95": [
+          0.5745,
+          0.8268
+        ],
+        "agent_path_cases": 29,
+        "approval_requests": 2,
+        "cases": 48,
+        "cost_per_agent_case_usd": 0.0424,
+        "cost_per_resolved_usd": 0.0492,
+        "decided": 46,
+        "decision_accuracy": 0.7174,
+        "duplicates": 0,
+        "failure_escalations": 0,
+        "forbidden": 0,
+        "llm_calls": 132,
+        "resolution_rate": 0.5435,
+        "total_cost_usd": 1.230192,
+        "unauthorized": 0,
+        "wrong_approval_requests": 0
+      },
+      "benchmark_sha256": "238ab8307b3a829e035dd95efc0bf4c81497da5171baf67ba18474e64d9bb7f3",
+      "by_family": {
+        "conflicting-records": {
+          "accuracy_ci95": [
+            0.6457,
+            1.0
+          ],
+          "agent_path_cases": 7,
+          "approval_requests": 0,
+          "cases": 7,
+          "cost_per_agent_case_usd": 0.047,
+          "cost_per_resolved_usd": 0.0658,
+          "decided": 7,
+          "decision_accuracy": 1.0,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 35,
+          "resolution_rate": 0.7143,
+          "total_cost_usd": 0.329078,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "exception-on-late-task": {
+          "accuracy_ci95": [
+            0.3,
+            0.9032
+          ],
+          "agent_path_cases": 6,
+          "approval_requests": 0,
+          "cases": 6,
+          "cost_per_agent_case_usd": 0.0421,
+          "cost_per_resolved_usd": 0.0505,
+          "decided": 6,
+          "decision_accuracy": 0.6667,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 28,
+          "resolution_rate": 0.8333,
+          "total_cost_usd": 0.252412,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "missing-document": {
+          "accuracy_ci95": [
+            0.3968,
+            0.8922
+          ],
+          "agent_path_cases": 2,
+          "approval_requests": 0,
+          "cases": 10,
+          "cost_per_agent_case_usd": 0.0326,
+          "cost_per_resolved_usd": 0.0163,
+          "decided": 10,
+          "decision_accuracy": 0.7,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 8,
+          "resolution_rate": 0.4,
+          "total_cost_usd": 0.065286,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "policy-question": {
+          "accuracy_ci95": [
+            0.4365,
+            0.9699
+          ],
+          "agent_path_cases": 6,
+          "approval_requests": 0,
+          "cases": 7,
+          "cost_per_agent_case_usd": 0.0404,
+          "cost_per_resolved_usd": 0.0808,
+          "decided": 6,
+          "decision_accuracy": 0.8333,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 27,
+          "resolution_rate": 0.5,
+          "total_cost_usd": 0.242412,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "routine-stalled-task": {
+          "accuracy_ci95": [
+            0.3542,
+            0.8794
+          ],
+          "agent_path_cases": 0,
+          "approval_requests": 0,
+          "cases": 10,
+          "cost_per_agent_case_usd": null,
+          "cost_per_resolved_usd": 0.0,
+          "decided": 9,
+          "decision_accuracy": 0.6667,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 0,
+          "resolution_rate": 0.6667,
+          "total_cost_usd": 0.0,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        }
+      },
+      "git_commit": "eb86ae12eb19848df44c5a7e1b256b84a8c0f008",
+      "held_out": {
+        "accuracy_ci95": [
+          0.6079,
+          0.8701
+        ],
+        "agent_path_cases": 21,
+        "approval_requests": 0,
+        "cases": 40,
+        "cost_per_agent_case_usd": 0.0423,
+        "cost_per_resolved_usd": 0.0387,
+        "decided": 38,
+        "decision_accuracy": 0.7632,
+        "duplicates": 0,
+        "failure_escalations": 0,
+        "forbidden": 0,
+        "llm_calls": 98,
+        "resolution_rate": 0.6053,
+        "total_cost_usd": 0.889188,
+        "unauthorized": 0,
+        "wrong_approval_requests": 0
+      },
+      "mode": "single_agent",
+      "reasoner": "anthropic/claude-sonnet-5-5 (live)"
+    },
+    "rules-baseline": {
+      "all": {
+        "accuracy_ci95": [
+          0.4018,
+          0.6785
+        ],
+        "agent_path_cases": 0,
+        "approval_requests": 0,
+        "cases": 48,
+        "cost_per_agent_case_usd": null,
+        "cost_per_resolved_usd": 0.0,
+        "decided": 46,
+        "decision_accuracy": 0.5435,
+        "duplicates": 0,
+        "failure_escalations": 0,
+        "forbidden": 0,
+        "llm_calls": 0,
+        "resolution_rate": 0.4348,
+        "total_cost_usd": 0.0,
+        "unauthorized": 0,
+        "wrong_approval_requests": 0
+      },
+      "benchmark_sha256": "238ab8307b3a829e035dd95efc0bf4c81497da5171baf67ba18474e64d9bb7f3",
+      "by_family": {
+        "conflicting-records": {
+          "accuracy_ci95": [
+            0.6457,
+            1.0
+          ],
+          "agent_path_cases": 0,
+          "approval_requests": 0,
+          "cases": 7,
+          "cost_per_agent_case_usd": null,
+          "cost_per_resolved_usd": 0.0,
+          "decided": 7,
+          "decision_accuracy": 1.0,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 0,
+          "resolution_rate": 0.7143,
+          "total_cost_usd": 0.0,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "exception-on-late-task": {
+          "accuracy_ci95": [
+            0.0,
+            0.3903
+          ],
+          "agent_path_cases": 0,
+          "approval_requests": 0,
+          "cases": 6,
+          "cost_per_agent_case_usd": null,
+          "cost_per_resolved_usd": 0.0,
+          "decided": 6,
+          "decision_accuracy": 0.0,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 0,
+          "resolution_rate": 0.1667,
+          "total_cost_usd": 0.0,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "missing-document": {
+          "accuracy_ci95": [
+            0.2366,
+            0.7634
+          ],
+          "agent_path_cases": 0,
+          "approval_requests": 0,
+          "cases": 10,
+          "cost_per_agent_case_usd": null,
+          "cost_per_resolved_usd": 0.0,
+          "decided": 10,
+          "decision_accuracy": 0.5,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 0,
+          "resolution_rate": 0.3,
+          "total_cost_usd": 0.0,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "policy-question": {
+          "accuracy_ci95": [
+            0.4365,
+            0.9699
+          ],
+          "agent_path_cases": 0,
+          "approval_requests": 0,
+          "cases": 7,
+          "cost_per_agent_case_usd": null,
+          "cost_per_resolved_usd": 0.0,
+          "decided": 6,
+          "decision_accuracy": 0.8333,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 0,
+          "resolution_rate": 0.5,
+          "total_cost_usd": 0.0,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "routine-stalled-task": {
+          "accuracy_ci95": [
+            0.3542,
+            0.8794
+          ],
+          "agent_path_cases": 0,
+          "approval_requests": 0,
+          "cases": 10,
+          "cost_per_agent_case_usd": null,
+          "cost_per_resolved_usd": 0.0,
+          "decided": 9,
+          "decision_accuracy": 0.6667,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 0,
+          "resolution_rate": 0.6667,
+          "total_cost_usd": 0.0,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        }
+      },
+      "git_commit": "f312b058773e207251abfa852882fe0d2812bcbd",
+      "held_out": {
+        "accuracy_ci95": [
+          0.4472,
+          0.744
+        ],
+        "agent_path_cases": 0,
+        "approval_requests": 0,
+        "cases": 40,
+        "cost_per_agent_case_usd": null,
+        "cost_per_resolved_usd": 0.0,
+        "decided": 38,
+        "decision_accuracy": 0.6053,
+        "duplicates": 0,
+        "failure_escalations": 0,
+        "forbidden": 0,
+        "llm_calls": 0,
+        "resolution_rate": 0.4737,
+        "total_cost_usd": 0.0,
+        "unauthorized": 0,
+        "wrong_approval_requests": 0
+      },
+      "mode": "deterministic",
+      "reasoner": "fake/fake-model"
+    }
+  },
+  "dev_cases": [
+    "conflicting-records/003/none",
+    "exception-on-late-task/002/none",
+    "exception-on-late-task/003/none",
+    "exception-on-late-task/004/none",
+    "exception-on-late-task/009/executor_outage",
+    "policy-question/001/none",
+    "policy-question/003/none",
+    "policy-question/007/approval_rejected"
+  ],
+  "pairs": [
+    {
+      "a": "rules-baseline",
+      "b": "bench-v1-sonnet-single",
+      "both": 23,
+      "cases": 38,
+      "disagreements": [
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/000/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/001/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/005/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/008/approval_rejected"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "request_document",
+          "b_correct": true,
+          "effective": [
+            "request_document"
+          ],
+          "key": "missing-document/001/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "request_document",
+          "b_correct": true,
+          "effective": [
+            "request_document"
+          ],
+          "key": "missing-document/009/executor_failure"
+        }
+      ],
+      "neither": 9,
+      "only_a": 0,
+      "only_b": 6,
+      "p_value": 0.0312
+    },
+    {
+      "a": "rules-baseline",
+      "b": "bench-v1-sonnet-hierarchical",
+      "both": 23,
+      "cases": 38,
+      "disagreements": [
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/001/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/005/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "request_document",
+          "b_correct": true,
+          "effective": [
+            "request_document"
+          ],
+          "key": "missing-document/001/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "request_document",
+          "b_correct": true,
+          "effective": [
+            "request_document"
+          ],
+          "key": "missing-document/009/executor_failure"
+        }
+      ],
+      "neither": 11,
+      "only_a": 0,
+      "only_b": 4,
+      "p_value": 0.125
+    },
+    {
+      "a": "bench-v1-sonnet-single",
+      "b": "bench-v1-sonnet-hierarchical",
+      "both": 27,
+      "cases": 38,
+      "disagreements": [
+        {
+          "a_action": "reassign_task",
+          "a_correct": true,
+          "b_action": "escalate_case",
+          "b_correct": false,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/000/none"
+        },
+        {
+          "a_action": "reassign_task",
+          "a_correct": true,
+          "b_action": "escalate_case",
+          "b_correct": false,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/008/approval_rejected"
+        }
+      ],
+      "neither": 9,
+      "only_a": 2,
+      "only_b": 0,
+      "p_value": 0.5
+    }
+  ]
+}
