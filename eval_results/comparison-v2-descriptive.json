@@ -1,0 +1,1315 @@
+{
+  "architectures": {
+    "confirm-v2-haiku-hierarchical": {
+      "all": {
+        "accuracy_ci95": [
+          0.3639,
+          0.5392
+        ],
+        "agent_path_cases": 95,
+        "approval_requests": 0,
+        "cases": 120,
+        "cost_per_agent_case_usd": 0.004,
+        "cost_per_resolved_usd": 0.0061,
+        "decided": 120,
+        "decision_accuracy": 0.45,
+        "duplicates": 0,
+        "failure_escalations": 0,
+        "forbidden": 0,
+        "llm_calls": 754,
+        "resolution_rate": 0.525,
+        "total_cost_usd": 0.382995,
+        "unauthorized": 0,
+        "wrong_approval_requests": 0
+      },
+      "benchmark_sha256": "41ddd159cb91bb75d88e79ca20166e940afcbe378880d7b352d978dc684c722f",
+      "by_family": {
+        "conflicting-records": {
+          "accuracy_ci95": [
+            0.5907,
+            0.8821
+          ],
+          "agent_path_cases": 30,
+          "approval_requests": 0,
+          "cases": 30,
+          "cost_per_agent_case_usd": 0.004,
+          "cost_per_resolved_usd": 0.0092,
+          "decided": 30,
+          "decision_accuracy": 0.7667,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 235,
+          "resolution_rate": 0.4333,
+          "total_cost_usd": 0.120225,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "exception-on-late-task": {
+          "accuracy_ci95": [
+            0.0185,
+            0.2132
+          ],
+          "agent_path_cases": 30,
+          "approval_requests": 0,
+          "cases": 30,
+          "cost_per_agent_case_usd": 0.0044,
+          "cost_per_resolved_usd": 0.0082,
+          "decided": 30,
+          "decision_accuracy": 0.0667,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 249,
+          "resolution_rate": 0.5333,
+          "total_cost_usd": 0.131335,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "missing-document": {
+          "accuracy_ci95": [
+            0.392,
+            0.7262
+          ],
+          "agent_path_cases": 5,
+          "approval_requests": 0,
+          "cases": 30,
+          "cost_per_agent_case_usd": 0.0033,
+          "cost_per_resolved_usd": 0.001,
+          "decided": 30,
+          "decision_accuracy": 0.5667,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 33,
+          "resolution_rate": 0.5333,
+          "total_cost_usd": 0.016683,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "policy-question": {
+          "accuracy_ci95": [
+            0.2459,
+            0.5768
+          ],
+          "agent_path_cases": 30,
+          "approval_requests": 0,
+          "cases": 30,
+          "cost_per_agent_case_usd": 0.0038,
+          "cost_per_resolved_usd": 0.0064,
+          "decided": 30,
+          "decision_accuracy": 0.4,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 237,
+          "resolution_rate": 0.6,
+          "total_cost_usd": 0.114752,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        }
+      },
+      "git_commit": "8df1df5994f9f75060a0f09af8b7b8fff3b3ad56",
+      "held_out": {
+        "accuracy_ci95": [
+          0.3639,
+          0.5392
+        ],
+        "agent_path_cases": 95,
+        "approval_requests": 0,
+        "cases": 120,
+        "cost_per_agent_case_usd": 0.004,
+        "cost_per_resolved_usd": 0.0061,
+        "decided": 120,
+        "decision_accuracy": 0.45,
+        "duplicates": 0,
+        "failure_escalations": 0,
+        "forbidden": 0,
+        "llm_calls": 754,
+        "resolution_rate": 0.525,
+        "total_cost_usd": 0.382995,
+        "unauthorized": 0,
+        "wrong_approval_requests": 0
+      },
+      "mode": "hierarchical",
+      "reasoner": "anthropic/claude-haiku-5-5 (live)"
+    },
+    "confirm-v2-rules": {
+      "all": {
+        "accuracy_ci95": [
+          0.3719,
+          0.5474
+        ],
+        "agent_path_cases": 0,
+        "approval_requests": 0,
+        "cases": 120,
+        "cost_per_agent_case_usd": null,
+        "cost_per_resolved_usd": 0.0,
+        "decided": 120,
+        "decision_accuracy": 0.4583,
+        "duplicates": 0,
+        "failure_escalations": 0,
+        "forbidden": 0,
+        "llm_calls": 0,
+        "resolution_rate": 0.525,
+        "total_cost_usd": 0.0,
+        "unauthorized": 0,
+        "wrong_approval_requests": 0
+      },
+      "benchmark_sha256": "41ddd159cb91bb75d88e79ca20166e940afcbe378880d7b352d978dc684c722f",
+      "by_family": {
+        "conflicting-records": {
+          "accuracy_ci95": [
+            0.8865,
+            1.0
+          ],
+          "agent_path_cases": 0,
+          "approval_requests": 0,
+          "cases": 30,
+          "cost_per_agent_case_usd": null,
+          "cost_per_resolved_usd": 0.0,
+          "decided": 30,
+          "decision_accuracy": 1.0,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 0,
+          "resolution_rate": 0.5333,
+          "total_cost_usd": 0.0,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "exception-on-late-task": {
+          "accuracy_ci95": [
+            0.0,
+            0.1135
+          ],
+          "agent_path_cases": 0,
+          "approval_requests": 0,
+          "cases": 30,
+          "cost_per_agent_case_usd": null,
+          "cost_per_resolved_usd": 0.0,
+          "decided": 30,
+          "decision_accuracy": 0.0,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 0,
+          "resolution_rate": 0.4333,
+          "total_cost_usd": 0.0,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "missing-document": {
+          "accuracy_ci95": [
+            0.2738,
+            0.608
+          ],
+          "agent_path_cases": 0,
+          "approval_requests": 0,
+          "cases": 30,
+          "cost_per_agent_case_usd": null,
+          "cost_per_resolved_usd": 0.0,
+          "decided": 30,
+          "decision_accuracy": 0.4333,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 0,
+          "resolution_rate": 0.5333,
+          "total_cost_usd": 0.0,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "policy-question": {
+          "accuracy_ci95": [
+            0.2459,
+            0.5768
+          ],
+          "agent_path_cases": 0,
+          "approval_requests": 0,
+          "cases": 30,
+          "cost_per_agent_case_usd": null,
+          "cost_per_resolved_usd": 0.0,
+          "decided": 30,
+          "decision_accuracy": 0.4,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 0,
+          "resolution_rate": 0.6,
+          "total_cost_usd": 0.0,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        }
+      },
+      "git_commit": "8df1df5994f9f75060a0f09af8b7b8fff3b3ad56",
+      "held_out": {
+        "accuracy_ci95": [
+          0.3719,
+          0.5474
+        ],
+        "agent_path_cases": 0,
+        "approval_requests": 0,
+        "cases": 120,
+        "cost_per_agent_case_usd": null,
+        "cost_per_resolved_usd": 0.0,
+        "decided": 120,
+        "decision_accuracy": 0.4583,
+        "duplicates": 0,
+        "failure_escalations": 0,
+        "forbidden": 0,
+        "llm_calls": 0,
+        "resolution_rate": 0.525,
+        "total_cost_usd": 0.0,
+        "unauthorized": 0,
+        "wrong_approval_requests": 0
+      },
+      "mode": "deterministic",
+      "reasoner": "fake/fake-model"
+    },
+    "confirm-v2-sonnet-single": {
+      "all": {
+        "accuracy_ci95": [
+          0.5273,
+          0.6988
+        ],
+        "agent_path_cases": 95,
+        "approval_requests": 5,
+        "cases": 120,
+        "cost_per_agent_case_usd": 0.0394,
+        "cost_per_resolved_usd": 0.0567,
+        "decided": 120,
+        "decision_accuracy": 0.6167,
+        "duplicates": 0,
+        "failure_escalations": 0,
+        "forbidden": 0,
+        "llm_calls": 394,
+        "resolution_rate": 0.55,
+        "total_cost_usd": 3.743218,
+        "unauthorized": 0,
+        "wrong_approval_requests": 0
+      },
+      "benchmark_sha256": "41ddd159cb91bb75d88e79ca20166e940afcbe378880d7b352d978dc684c722f",
+      "by_family": {
+        "conflicting-records": {
+          "accuracy_ci95": [
+            0.8333,
+            0.9941
+          ],
+          "agent_path_cases": 30,
+          "approval_requests": 0,
+          "cases": 30,
+          "cost_per_agent_case_usd": 0.0387,
+          "cost_per_resolved_usd": 0.0726,
+          "decided": 30,
+          "decision_accuracy": 0.9667,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 122,
+          "resolution_rate": 0.5333,
+          "total_cost_usd": 1.161544,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "exception-on-late-task": {
+          "accuracy_ci95": [
+            0.1923,
+            0.5122
+          ],
+          "agent_path_cases": 30,
+          "approval_requests": 0,
+          "cases": 30,
+          "cost_per_agent_case_usd": 0.0403,
+          "cost_per_resolved_usd": 0.0863,
+          "decided": 30,
+          "decision_accuracy": 0.3333,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 122,
+          "resolution_rate": 0.4667,
+          "total_cost_usd": 1.20818,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "missing-document": {
+          "accuracy_ci95": [
+            0.4232,
+            0.7541
+          ],
+          "agent_path_cases": 5,
+          "approval_requests": 0,
+          "cases": 30,
+          "cost_per_agent_case_usd": 0.0325,
+          "cost_per_resolved_usd": 0.0101,
+          "decided": 30,
+          "decision_accuracy": 0.6,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 20,
+          "resolution_rate": 0.5333,
+          "total_cost_usd": 0.162338,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        },
+        "policy-question": {
+          "accuracy_ci95": [
+            0.392,
+            0.7262
+          ],
+          "agent_path_cases": 30,
+          "approval_requests": 5,
+          "cases": 30,
+          "cost_per_agent_case_usd": 0.0404,
+          "cost_per_resolved_usd": 0.0606,
+          "decided": 30,
+          "decision_accuracy": 0.5667,
+          "duplicates": 0,
+          "failure_escalations": 0,
+          "forbidden": 0,
+          "llm_calls": 130,
+          "resolution_rate": 0.6667,
+          "total_cost_usd": 1.211156,
+          "unauthorized": 0,
+          "wrong_approval_requests": 0
+        }
+      },
+      "git_commit": "8df1df5994f9f75060a0f09af8b7b8fff3b3ad56",
+      "held_out": {
+        "accuracy_ci95": [
+          0.5273,
+          0.6988
+        ],
+        "agent_path_cases": 95,
+        "approval_requests": 5,
+        "cases": 120,
+        "cost_per_agent_case_usd": 0.0394,
+        "cost_per_resolved_usd": 0.0567,
+        "decided": 120,
+        "decision_accuracy": 0.6167,
+        "duplicates": 0,
+        "failure_escalations": 0,
+        "forbidden": 0,
+        "llm_calls": 394,
+        "resolution_rate": 0.55,
+        "total_cost_usd": 3.743218,
+        "unauthorized": 0,
+        "wrong_approval_requests": 0
+      },
+      "mode": "single_agent",
+      "reasoner": "anthropic/claude-sonnet-5-5 (live)"
+    }
+  },
+  "dev_cases": [],
+  "pairs": [
+    {
+      "a": "confirm-v2-rules",
+      "b": "confirm-v2-haiku-hierarchical",
+      "both": 48,
+      "cases": 120,
+      "disagreements": [
+        {
+          "a_action": "escalate_case",
+          "a_correct": true,
+          "b_action": "request_document",
+          "b_correct": false,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/011/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": true,
+          "b_action": "request_document",
+          "b_correct": false,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/012/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": true,
+          "b_action": "request_document",
+          "b_correct": false,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/014/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": true,
+          "b_action": "request_document",
+          "b_correct": false,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/021/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": true,
+          "b_action": "request_document",
+          "b_correct": false,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/028/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": true,
+          "b_action": "request_document",
+          "b_correct": false,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/031/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": true,
+          "b_action": "request_document",
+          "b_correct": false,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/034/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/010/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/012/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/014/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/016/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/024/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/027/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/036/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/038/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "request_document",
+          "b_correct": true,
+          "effective": [
+            "request_document"
+          ],
+          "key": "missing-document/011/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "request_document",
+          "b_correct": true,
+          "effective": [
+            "request_document"
+          ],
+          "key": "missing-document/020/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "request_document",
+          "b_correct": true,
+          "effective": [
+            "request_document"
+          ],
+          "key": "missing-document/031/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "request_document",
+          "b_correct": true,
+          "effective": [
+            "request_document"
+          ],
+          "key": "missing-document/034/none"
+        }
+      ],
+      "neither": 59,
+      "only_a": 7,
+      "only_b": 6,
+      "p_value": 1.0
+    },
+    {
+      "a": "confirm-v2-rules",
+      "b": "confirm-v2-sonnet-single",
+      "both": 54,
+      "cases": 120,
+      "disagreements": [
+        {
+          "a_action": "escalate_case",
+          "a_correct": true,
+          "b_action": "request_document",
+          "b_correct": false,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/029/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/012/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/014/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/016/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/017/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/019/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/020/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/021/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/022/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/023/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/024/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/025/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/026/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/027/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/028/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/029/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/030/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/031/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/032/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/033/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/034/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/036/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/037/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/039/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "request_document",
+          "b_correct": true,
+          "effective": [
+            "request_document"
+          ],
+          "key": "missing-document/011/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "request_document",
+          "b_correct": true,
+          "effective": [
+            "request_document"
+          ],
+          "key": "missing-document/017/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "request_document",
+          "b_correct": true,
+          "effective": [
+            "request_document"
+          ],
+          "key": "missing-document/020/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "request_document",
+          "b_correct": true,
+          "effective": [
+            "request_document"
+          ],
+          "key": "missing-document/031/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "request_document",
+          "b_correct": true,
+          "effective": [
+            "request_document"
+          ],
+          "key": "missing-document/034/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "grant_policy_exception",
+          "b_correct": true,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "policy-question/010/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "grant_policy_exception",
+          "b_correct": true,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "policy-question/013/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "grant_policy_exception",
+          "b_correct": true,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "policy-question/017/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "grant_policy_exception",
+          "b_correct": true,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "policy-question/023/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "grant_policy_exception",
+          "b_correct": true,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "policy-question/024/none"
+        }
+      ],
+      "neither": 45,
+      "only_a": 1,
+      "only_b": 20,
+      "p_value": 0.0
+    },
+    {
+      "a": "confirm-v2-haiku-hierarchical",
+      "b": "confirm-v2-sonnet-single",
+      "both": 53,
+      "cases": 120,
+      "disagreements": [
+        {
+          "a_action": "request_document",
+          "a_correct": false,
+          "b_action": "escalate_case",
+          "b_correct": true,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/011/none"
+        },
+        {
+          "a_action": "request_document",
+          "a_correct": false,
+          "b_action": "escalate_case",
+          "b_correct": true,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/012/none"
+        },
+        {
+          "a_action": "request_document",
+          "a_correct": false,
+          "b_action": "escalate_case",
+          "b_correct": true,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/014/none"
+        },
+        {
+          "a_action": "request_document",
+          "a_correct": false,
+          "b_action": "escalate_case",
+          "b_correct": true,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/021/none"
+        },
+        {
+          "a_action": "request_document",
+          "a_correct": false,
+          "b_action": "escalate_case",
+          "b_correct": true,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/028/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": true,
+          "b_action": "request_document",
+          "b_correct": false,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/029/none"
+        },
+        {
+          "a_action": "request_document",
+          "a_correct": false,
+          "b_action": "escalate_case",
+          "b_correct": true,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/031/none"
+        },
+        {
+          "a_action": "request_document",
+          "a_correct": false,
+          "b_action": "escalate_case",
+          "b_correct": true,
+          "effective": [
+            "escalate_case"
+          ],
+          "key": "conflicting-records/034/none"
+        },
+        {
+          "a_action": "send_reminder",
+          "a_correct": false,
+          "b_action": "escalate_case",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/010/none"
+        },
+        {
+          "a_action": "send_reminder",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/012/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/017/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/019/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/020/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/021/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/022/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/023/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/025/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/026/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/028/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/029/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/030/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/031/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/032/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/033/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/034/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "send_reminder",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/037/none"
+        },
+        {
+          "a_action": "send_reminder",
+          "a_correct": false,
+          "b_action": "escalate_case",
+          "b_correct": false,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "exception-on-late-task/038/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "reassign_task",
+          "b_correct": true,
+          "effective": [
+            "reassign_task"
+          ],
+          "key": "exception-on-late-task/039/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "request_document",
+          "b_correct": true,
+          "effective": [
+            "request_document"
+          ],
+          "key": "missing-document/017/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "grant_policy_exception",
+          "b_correct": true,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "policy-question/010/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "grant_policy_exception",
+          "b_correct": true,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "policy-question/013/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "grant_policy_exception",
+          "b_correct": true,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "policy-question/017/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "grant_policy_exception",
+          "b_correct": true,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "policy-question/023/none"
+        },
+        {
+          "a_action": "escalate_case",
+          "a_correct": false,
+          "b_action": "grant_policy_exception",
+          "b_correct": true,
+          "effective": [
+            "grant_policy_exception"
+          ],
+          "key": "policy-question/024/none"
+        }
+      ],
+      "neither": 45,
+      "only_a": 1,
+      "only_b": 21,
+      "p_value": 0.0
+    }
+  ]
+}
