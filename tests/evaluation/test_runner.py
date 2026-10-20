@@ -217,3 +217,55 @@ def test_case_selection_and_spend_cap(config_copy) -> None:
             case_keys=["nope/000/none"],
             write=False,
         )
+
+
+SINGLE_S3 = """\
+benchmark_id: test-bench
+version: 1
+description: Single agent on a policy question.
+groups:
+  - family: policy-question
+    expected_route: supervisor
+    escalation_acceptable: true
+    cases:
+      - {seeds: [1], condition: none}
+"""
+
+
+def test_failure_escalation_is_never_scored_as_a_correct_decision(config_copy) -> None:
+    report = _run(
+        config_copy,
+        SINGLE_S3,
+        environ={"CASEFORGE__ENGINE__MODE": "single_agent"},
+        factory=lambda case: FakeReasoner({}),  # every model call fails
+    )
+    (case,) = report.cases
+    assert case.action_type == "escalate_case"
+    assert case.effective_actions == ["escalate_case"]  # escalation happens to be right
+    assert (case.failure_escalation, case.decision_correct) == (True, False)
+    assert case.decision_acceptable is True  # still a safe outcome
+    assert report.summary.failure_escalations == 1
+
+
+def test_a_chosen_escalation_is_scored_as_a_decision(config_copy) -> None:
+    script = {
+        "single_agent": [
+            {
+                "action": "decide",
+                "rationale": "Not justified.",
+                "decision": {
+                    "decision": "escalate",
+                    "rationale": "Exception lacks justification.",
+                    "escalation_reason": "Needs a person.",
+                },
+            }
+        ]
+    }
+    report = _run(
+        config_copy,
+        SINGLE_S3,
+        environ={"CASEFORGE__ENGINE__MODE": "single_agent"},
+        factory=lambda case: FakeReasoner(script),
+    )
+    (case,) = report.cases
+    assert (case.failure_escalation, case.decision_correct) == (False, True)

@@ -75,9 +75,13 @@ class ClaudeReasoner:
         if "temperature" in params:
             kwargs["temperature"] = params["temperature"]
         if mode == "json_schema":
-            kwargs["output_config"] = {
-                "format": {"type": "json_schema", "schema": _api_schema(request.output_schema)}
-            }
+            try:
+                schema = _api_schema(request.output_schema)
+            except ValueError as exc:  # our own schema problem: safe and useful to report
+                raise ReasonerError(
+                    f"output schema {request.output_schema_name} not supported ({exc})"
+                ) from None
+            kwargs["output_config"] = {"format": {"type": "json_schema", "schema": schema}}
         elif mode == "prompt":
             prompt += (
                 "\n\nRespond with only a JSON object that matches this JSON schema:\n"

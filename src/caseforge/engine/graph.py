@@ -361,13 +361,20 @@ def build_case_graph(deps: EngineDeps) -> StateGraph:
     def escalate(state: CaseRunState) -> CaseRunState:
         deps.guard("escalate")
         reason = _escalation_reason(state)
+        synthesis = state.get("synthesis") or {}
+        chosen = (
+            synthesis.get("status") == SupervisorStatus.OK
+            and (synthesis.get("output") or {}).get("decision") == "escalate"
+        )
+        cause = "agent" if chosen else "failure"  # failure: plan, synthesis or agent failed
         return {
             "decision": {
                 "source": "escalation",
                 "action_type": deps.escalation_action,
                 "reason": reason,
+                "cause": cause,
             },
-            "trace": [{"node": "escalate", "reason": reason}],
+            "trace": [{"node": "escalate", "reason": reason, "cause": cause}],
         }
 
     def approval_gate(state: CaseRunState) -> CaseRunState:

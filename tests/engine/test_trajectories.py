@@ -148,5 +148,6 @@ def test_conflicting_records_clarify_then_escalate(config_copy) -> None:
         "source": "escalation",
         "action_type": "escalate_case",
         "reason": reason,
+        "cause": "agent",  # the supervisor chose to escalate; nothing failed
     }
     assert [a.action_type for a in world.ground_truth().actions] == ["escalate_case"]

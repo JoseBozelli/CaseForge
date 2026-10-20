@@ -146,3 +146,9 @@ def test_billed_failures_are_charged_to_the_budget() -> None:
             "evidence", variables, EvidenceStep, CallContext(run_id="r", node="evidence", step=0)
         )
     assert charged == [usage]
+
+
+def test_unsupported_schema_is_a_reasoner_error_with_our_message() -> None:
+    request = _request().model_copy(update={"output_schema": {"properties": {}}})
+    with pytest.raises(ReasonerError, match="output schema Answer not supported"):
+        ClaudeReasoner(StandInClient(_response("{}"))).complete(request)

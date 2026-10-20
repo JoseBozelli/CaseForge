@@ -6,9 +6,18 @@ Every finding cites the source ids (event ids or knowledge chunk ids) it relies 
 
 from __future__ import annotations
 
-from typing import Literal
+import json
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    JsonValue,
+    WithJsonSchema,
+    field_validator,
+    model_validator,
+)
 
 from caseforge.events.envelope import NonEmptyStr
 from caseforge.events.vocabulary import Name
@@ -46,9 +55,38 @@ class PolicyFindings(_Strict):
         return {s for fact in (*self.requirements, *self.exceptions) for s in fact.source_ids}
 
 
+ToolArguments = Annotated[
+    dict[str, JsonValue],
+    WithJsonSchema(
+        {
+            "type": "string",
+            "description": (
+                'Tool arguments as a JSON object encoded in a string, e.g. "{\\"query\\": '
+                '\\"late task\\"}". Use "{}" when the tool takes no arguments.'
+            ),
+        }
+    ),
+]
+
+
 class ToolRequest(_Strict):
+    """The model sends arguments as a JSON string (structured outputs cannot express a
+    free-form object); they are decoded here, so everything downstream sees a dict."""
+
     tool: NonEmptyStr
-    arguments: dict[str, JsonValue] = Field(default_factory=dict)
+    arguments: ToolArguments = Field(default_factory=dict)
+
+    @field_validator("arguments", mode="before")
+    @classmethod
+    def _decode(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            try:
+                value = json.loads(value) if value.strip() else {}
+            except json.JSONDecodeError as exc:
+                raise ValueError("arguments must be a JSON object") from exc
+            if not isinstance(value, dict):
+                raise ValueError("arguments must be a JSON object")
+        return value
 
 
 class _Step(_Strict):

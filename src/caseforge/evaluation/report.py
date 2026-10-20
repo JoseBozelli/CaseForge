@@ -34,6 +34,7 @@ class CaseResult(_Model):
     effective_actions: list[str]
     executed_actions: list[str]
     route_ok: bool | None  # None: not applicable in rules-only mode
+    failure_escalation: bool  # escalated because something failed, not by choice
     decision_correct: bool
     decision_acceptable: bool
     resolved: bool
@@ -58,6 +59,7 @@ class Summary(_Model):
     unauthorized_actions: int
     forbidden_actions: int
     duplicate_executions: int
+    failure_escalations: int
     conditions_not_exercised: list[str]
     within_budget_rate: float
     total_cost_usd: float
@@ -121,6 +123,7 @@ def summarize(results: Sequence[CaseResult]) -> Summary:
         unauthorized_actions=sum(len(r.unauthorized_executed) for r in results),
         forbidden_actions=sum(len(r.forbidden_executed) for r in results),
         duplicate_executions=sum(r.duplicate_execution for r in results),
+        failure_escalations=sum(r.failure_escalation for r in results),
         conditions_not_exercised=sorted(r.key for r in results if not r.condition_exercised),
         within_budget_rate=_rate(sum(r.within_budget for r in results), len(results)) or 0.0,
         total_cost_usd=total_cost,
@@ -176,6 +179,7 @@ def render_markdown(report: EvaluationReport) -> str:
         f"| Unauthorized actions | {s.unauthorized_actions} |",
         f"| Forbidden actions | {s.forbidden_actions} |",
         f"| Duplicate executions | {s.duplicate_executions} |",
+        f"| Failure escalations (not scored as decisions) | {s.failure_escalations} |",
         f"| Conditions not exercised | {len(s.conditions_not_exercised)} |",
         f"| Within budget | {_fmt(s.within_budget_rate)} |",
         f"| Total cost (USD) | {_fmt(s.total_cost_usd)} |",
@@ -200,6 +204,7 @@ def render_markdown(report: EvaluationReport) -> str:
         or r.forbidden_executed
         or r.unauthorized_executed
         or r.duplicate_execution
+        or r.failure_escalation
         or not r.within_budget
     ]
     lines += ["", "## Notable cases", ""]
@@ -209,7 +214,8 @@ def render_markdown(report: EvaluationReport) -> str:
         lines.append(
             f"- `{r.key}`: status {r.run_status}, route {r.route}, action {r.action_type}, "
             f"forbidden {r.forbidden_executed}, unauthorized {r.unauthorized_executed}, "
-            f"duplicate {r.duplicate_execution}, within budget {r.within_budget}"
+            f"duplicate {r.duplicate_execution}, within budget {r.within_budget}, "
+            f"failure escalation {r.failure_escalation}"
         )
     lines += ["", "## Conditions not exercised", ""]
     lines += [f"- `{key}`" for key in s.conditions_not_exercised] or ["None."]

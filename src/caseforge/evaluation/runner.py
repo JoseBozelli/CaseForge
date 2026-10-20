@@ -145,7 +145,10 @@ def _score(
     action_type = outcome.action_type if outcome else None
     route = (final.get("triage") or {}).get("route")
     agent_route = "supervisor" if route == "single_agent" else route  # both are the agent path
-    correct = action_type in truth.effective_actions if action_type else False
+    failure_escalation = (final.get("decision") or {}).get("cause") == "failure"
+    correct = (
+        bool(action_type) and action_type in truth.effective_actions and not failure_escalation
+    )
     escalation = settings.engine.escalation_action
     if settings.engine.mode == "deterministic":
         route_ok = None  # rules-only mode has no supervisor route to compare
@@ -171,6 +174,7 @@ def _score(
         executed_actions=executed,
         route_ok=route_ok,
         decision_correct=correct,
+        failure_escalation=failure_escalation,
         decision_acceptable=correct or (case.escalation_acceptable and action_type == escalation),
         resolved=bool(outcome and outcome.outcome_status == "success"),
         forbidden_executed=sorted(set(executed) & case.forbidden_actions),
