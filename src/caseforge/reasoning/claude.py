@@ -24,7 +24,7 @@ def load_api_key(path: Path, environ: Mapping[str, str]) -> str:
     if environ.get(KEY_NAME, "").strip():
         return environ[KEY_NAME].strip()
     if not path.is_file():
-        raise ConfigError(f"no API key: set {KEY_NAME} or create .secrets/{path.name}")
+        raise ConfigError(f"no API key: set {KEY_NAME} or add {KEY_NAME}=... to {path.name}")
     for raw in path.read_text(encoding="utf-8").splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
@@ -37,7 +37,7 @@ def load_api_key(path: Path, environ: Mapping[str, str]) -> str:
         key = line.strip().strip('"').strip("'")
         if key:
             return key
-    raise ConfigError(f"the API key file .secrets/{path.name} contains no key")
+    raise ConfigError(f"{path.name} contains no {KEY_NAME}")
 
 
 def _api_schema(schema: Mapping[str, Any]) -> dict[str, Any]:

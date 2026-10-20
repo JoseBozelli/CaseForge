@@ -99,7 +99,7 @@ class ReasoningSettings(_Section):
     pricing: ModelPricing = Field(default_factory=ModelPricing)
     price_table: dict[str, ModelPricing] = Field(default_factory=dict)
     source: Literal["live", "replay"] = "live"
-    api_key_file: RelativePath = "../.secrets/anthropic_api_key"
+    api_key_file: RelativePath = "../.secrets"
     timeout_seconds: float = Field(default=60.0, gt=0)
 
     @model_validator(mode="after")
