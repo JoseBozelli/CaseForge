@@ -102,3 +102,10 @@ evaluation:
   approver: approver-1
   admin: admin-1
   failing_tools: [get_timeline, search_policies]
+api:
+  workspace_dir: ../data/api
+  demo_model: claude-sonnet-5-5
+  demo_cassettes:           # recorded benchmark answers; demos replay them at no cost
+    single_agent: ../eval_results/cassettes/bench-v1-sonnet-single.jsonl
+    hierarchical: ../eval_results/cassettes/bench-v1-sonnet-hierarchical.jsonl
+

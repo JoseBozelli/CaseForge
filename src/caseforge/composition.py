@@ -23,7 +23,7 @@ from caseforge.common.hashing import sha256_hex
 from caseforge.engine.graph import EngineDeps, build_case_graph, no_fault
 from caseforge.events.mapping import EventNormalizer
 from caseforge.governance.budgets import LlmBudget
-from caseforge.governance.control_plane import ControlPlane
+from caseforge.governance.control_plane import ControlPlane, PermissionDenied
 from caseforge.governance.guards import (
     EmergencyStopEngaged,
     GovernedExecutor,
@@ -482,3 +482,6 @@ def build_container(
     return Container(
         loaded, project_root=root, clock=clock, reasoner=reasoner, fault_injector=fault_injector
     )
+
+
+__all__ = ["Container", "PermissionDenied", "build_container"]

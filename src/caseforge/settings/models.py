@@ -217,6 +217,14 @@ class EvaluationSettings(_Section):
     failing_tools: frozenset[Name] = frozenset({"get_timeline", "search_policies"})
 
 
+class ApiSettings(_Section):
+    """Operator API demo: isolated run workspaces and recorded answers per mode."""
+
+    workspace_dir: RelativePath = "../data/api"
+    demo_model: NonEmptyStr = "claude-sonnet-5-5"
+    demo_cassettes: dict[str, RelativePath] = Field(default_factory=dict)
+
+
 class Settings(_Section):
     """Root settings document. Secrets never belong here."""
 
@@ -235,3 +243,4 @@ class Settings(_Section):
     engine: EngineSettings
     governance: GovernanceSettings
     evaluation: EvaluationSettings
+    api: ApiSettings = Field(default_factory=ApiSettings)
