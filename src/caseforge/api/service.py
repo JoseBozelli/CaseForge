@@ -75,19 +75,42 @@ class DemoService:
             if c.condition == "none"
         ]
 
+    def demo_models(self) -> list[str]:
+        """Models with recorded demo answers; the configured default first."""
+        api = self._settings.api
+        return [api.demo_model, *sorted(m for m in api.demo_cassettes if m != api.demo_model)]
+
+    def operators(self) -> list[str]:
+        """Configured operator names (identity is simulated; roles are enforced)."""
+        return sorted(self._settings.governance.operators)
+
+    def list_runs(self) -> list[dict[str, Any]]:
+        """Every demo run in the workspace, newest first."""
+        if not self._workspace.is_dir():
+            return []
+        metas = [
+            json.loads(path.read_text(encoding="utf-8"))
+            for path in self._workspace.glob("*/meta.json")
+        ]
+        return sorted(metas, key=lambda meta: meta["started_at"], reverse=True)
+
     # runs
 
-    def start_run(self, *, family: str, seed: int, mode: str) -> dict[str, Any]:
+    def start_run(
+        self, *, family: str, seed: int, mode: str, model: str | None = None
+    ) -> dict[str, Any]:
         if mode not in MODES:
             raise ValueError(f"mode must be one of {list(MODES)}")
         if family not in {f.family_id for f in self._families}:
             raise ValueError(f"unknown family {family!r}")
         run_id = f"{mode.replace('_', '-')}-{family}-{seed:03d}-{secrets.token_hex(3)}"
-        with self._lock(run_id), self._container(run_id, mode) as container:
+        model = None if mode == "deterministic" else (model or self._settings.api.demo_model)
+        with self._lock(run_id), self._container(run_id, mode, model) as container:
             world = container.open_simulated_case(family, seed)
             meta = {
                 "run_id": run_id,
                 "mode": mode,
+                "model": model,
                 "family": family,
                 "seed": seed,
                 "case_id": world.case_id,
@@ -99,24 +122,36 @@ class DemoService:
 
     def get_run(self, run_id: str) -> dict[str, Any]:
         meta = self._meta(run_id)
-        with self._lock(run_id), self._container(run_id, meta["mode"]) as container:
+        with (
+            self._lock(run_id),
+            self._container(run_id, meta["mode"], meta.get("model")) as container,
+        ):
             return self._view(container, meta)
 
     def approve(self, run_id: str, *, actor: str, note: str | None) -> dict[str, Any]:
         meta = self._meta(run_id)
-        with self._lock(run_id), self._container(run_id, meta["mode"]) as container:
+        with (
+            self._lock(run_id),
+            self._container(run_id, meta["mode"], meta.get("model")) as container,
+        ):
             container.approve(run_id, actor=actor, note=note)
             return self._view(container, meta)
 
     def reject(self, run_id: str, *, actor: str, note: str | None) -> dict[str, Any]:
         meta = self._meta(run_id)
-        with self._lock(run_id), self._container(run_id, meta["mode"]) as container:
+        with (
+            self._lock(run_id),
+            self._container(run_id, meta["mode"], meta.get("model")) as container,
+        ):
             container.reject(run_id, actor=actor, note=note)
             return self._view(container, meta)
 
     def resume(self, run_id: str) -> dict[str, Any]:
         meta = self._meta(run_id)
-        with self._lock(run_id), self._container(run_id, meta["mode"]) as container:
+        with (
+            self._lock(run_id),
+            self._container(run_id, meta["mode"], meta.get("model")) as container,
+        ):
             container.resume(run_id)
             return self._view(container, meta)
 
@@ -193,7 +228,9 @@ class DemoService:
         return json.loads(self._meta_path(run_id).read_text(encoding="utf-8"))
 
     @contextmanager
-    def _container(self, workspace: str, mode: str) -> Iterator[Container]:
+    def _container(
+        self, workspace: str, mode: str, model: str | None = None
+    ) -> Iterator[Container]:
         case_dir = f"{self._settings.api.workspace_dir}/{workspace}"
         environ = {
             **self._environ,
@@ -211,14 +248,15 @@ class DemoService:
             if reasoner is not None:
                 kwargs["reasoner"] = reasoner
         elif mode != "deterministic":
-            cassette = self._settings.api.demo_cassettes.get(mode)
+            model = model or self._settings.api.demo_model
+            cassette = self._settings.api.demo_cassettes.get(model, {}).get(mode)
             if cassette is None:
-                raise ValueError(f"no recorded answers configured for mode {mode!r}")
+                raise ValueError(f"no recorded answers for model {model!r} in mode {mode!r}")
             environ.update(
                 {
                     "CASEFORGE__REASONING__PROVIDER": "anthropic",
                     "CASEFORGE__REASONING__SOURCE": "replay",
-                    "CASEFORGE__REASONING__MODEL": self._settings.api.demo_model,
+                    "CASEFORGE__REASONING__MODEL": model,
                     "CASEFORGE__REASONING__CASSETTE_PATH": str(cassette),
                 }
             )

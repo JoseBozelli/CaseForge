@@ -5,6 +5,7 @@ import shutil
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 from caseforge.api.app import create_app
@@ -42,6 +43,7 @@ def test_health_and_demo_cases(config_copy) -> None:
     keys = [case["key"] for case in client.get("/cases").json()]
     assert "policy-question/001/none" in keys
     assert all(key.endswith("/none") for key in keys)
+    assert client.get("/models").json() == ["claude-sonnet-5-5", "claude-haiku-5-5"]
 
 
 def test_rules_only_run_completes(config_copy) -> None:
@@ -100,18 +102,30 @@ def test_evaluation_lists_committed_reports(config_copy) -> None:
     assert [r["label"] for r in body["reports"]] == ["r"]
 
 
-def test_demo_replays_the_recorded_benchmark_decision(config_copy) -> None:
-    tape = "bench-v1-sonnet-single.jsonl"
+@pytest.mark.parametrize(
+    ("model", "label"),
+    [
+        ("claude-sonnet-5-5", "bench-v1-sonnet-single"),
+        ("claude-haiku-5-5", "bench-v1-haiku-single"),
+    ],
+)
+def test_demo_replays_the_recorded_benchmark_decision(config_copy, model: str, label: str) -> None:
     cassettes = config_copy.parent.parent / "eval_results" / "cassettes"
     cassettes.mkdir(parents=True, exist_ok=True)
-    shutil.copy(ROOT / "eval_results" / "cassettes" / tape, cassettes / tape)
-    report = json.loads((ROOT / "eval_results" / "bench-v1-sonnet-single.json").read_text("utf-8"))
+    shutil.copy(
+        ROOT / "eval_results" / "cassettes" / f"{label}.jsonl", cassettes / f"{label}.jsonl"
+    )
+    report = json.loads((ROOT / "eval_results" / f"{label}.json").read_text("utf-8"))
     expected = next(c for c in report["cases"] if c["key"] == "missing-document/001/none")
 
     run = (
         _client(config_copy)
-        .post("/runs", json={"family": "missing-document", "seed": 1, "mode": "single_agent"})
+        .post(
+            "/runs",
+            json={"family": "missing-document", "seed": 1, "mode": "single_agent", "model": model},
+        )
         .json()
     )
+    assert run["model"] == model
     assert run["decision_outcome"]["action_type"] == expected["action_type"]
     assert run["usage"]["llm_calls"] == expected["llm_calls"]

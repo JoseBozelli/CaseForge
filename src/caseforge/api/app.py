@@ -16,6 +16,7 @@ class StartRun(BaseModel):
     family: str
     seed: int = Field(ge=0, le=999)
     mode: Literal["deterministic", "single_agent", "hierarchical"] = "single_agent"
+    model: str | None = None  # a model from GET /models; ignored in deterministic mode
 
 
 class Answer(BaseModel):
@@ -66,9 +67,14 @@ def create_app(
         """Demo cases with recorded answers (benchmark cases without injected conditions)."""
         return svc.demo_cases()
 
+    @app.get("/models")
+    def models() -> list[str]:
+        """Models with recorded demo answers."""
+        return svc.demo_models()
+
     @app.post("/runs")
     def start_run(body: StartRun) -> dict[str, Any]:
-        return svc.start_run(family=body.family, seed=body.seed, mode=body.mode)
+        return svc.start_run(family=body.family, seed=body.seed, mode=body.mode, model=body.model)
 
     @app.get("/runs/{run_id}")
     def get_run(run_id: str) -> dict[str, Any]:

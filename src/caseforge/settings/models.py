@@ -222,7 +222,9 @@ class ApiSettings(_Section):
 
     workspace_dir: RelativePath = "../data/api"
     demo_model: NonEmptyStr = "claude-sonnet-5-5"
-    demo_cassettes: dict[str, RelativePath] = Field(default_factory=dict)
+    demo_cassettes: dict[str, dict[str, RelativePath]] = Field(
+        default_factory=dict
+    )  # model -> mode
 
 
 class Settings(_Section):
