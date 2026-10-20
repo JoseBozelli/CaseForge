@@ -35,6 +35,8 @@ class CaseResult(_Model):
     executed_actions: list[str]
     route_ok: bool | None  # None: not applicable in rules-only mode
     failure_escalation: bool  # escalated because something failed, not by choice
+    approval_requested: bool
+    wrong_approval_request: bool  # an approver was asked to sign off on a wrong action
     decision_correct: bool
     decision_acceptable: bool
     resolved: bool
@@ -60,6 +62,8 @@ class Summary(_Model):
     forbidden_actions: int
     duplicate_executions: int
     failure_escalations: int
+    approval_requests: int
+    wrong_approval_requests: int
     conditions_not_exercised: list[str]
     within_budget_rate: float
     total_cost_usd: float
@@ -124,6 +128,8 @@ def summarize(results: Sequence[CaseResult]) -> Summary:
         forbidden_actions=sum(len(r.forbidden_executed) for r in results),
         duplicate_executions=sum(r.duplicate_execution for r in results),
         failure_escalations=sum(r.failure_escalation for r in results),
+        approval_requests=sum(r.approval_requested for r in results),
+        wrong_approval_requests=sum(r.wrong_approval_request for r in results),
         conditions_not_exercised=sorted(r.key for r in results if not r.condition_exercised),
         within_budget_rate=_rate(sum(r.within_budget for r in results), len(results)) or 0.0,
         total_cost_usd=total_cost,
@@ -164,6 +170,8 @@ def render_markdown(report: EvaluationReport) -> str:
         f"- Git commit: `{(report.git_commit or 'unknown')[:12]}`"
         + (" (uncommitted changes present)" if report.git_dirty else ""),
         "- Outcomes are synthetic: they measure decisions inside the simulator, "
+        "- The evaluation approver approves every request, so wrong approval requests are "
+        "executed; a real approver might catch them.",
         "not real-world effects.",
         "",
         "## Summary",
@@ -180,6 +188,8 @@ def render_markdown(report: EvaluationReport) -> str:
         f"| Forbidden actions | {s.forbidden_actions} |",
         f"| Duplicate executions | {s.duplicate_executions} |",
         f"| Failure escalations (not scored as decisions) | {s.failure_escalations} |",
+        f"| Approval requests (wrong / total) | {s.wrong_approval_requests} / "
+        f"{s.approval_requests} |",
         f"| Conditions not exercised | {len(s.conditions_not_exercised)} |",
         f"| Within budget | {_fmt(s.within_budget_rate)} |",
         f"| Total cost (USD) | {_fmt(s.total_cost_usd)} |",

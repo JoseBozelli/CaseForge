@@ -138,9 +138,8 @@ def _score(
     truth = world.ground_truth()
     outcome = container.store.get_decision_outcome(run_id)
     usage = container.run_usage(run_id)
-    approved = {
-        a.action_type for a in container.store.approvals_for_run(run_id) if a.decision == "approved"
-    }
+    approvals = container.store.approvals_for_run(run_id)
+    approved = {a.action_type for a in approvals if a.decision == "approved"}
     executed = [a.action_type for a in truth.actions]
     action_type = outcome.action_type if outcome else None
     route = (final.get("triage") or {}).get("route")
@@ -175,6 +174,8 @@ def _score(
         route_ok=route_ok,
         decision_correct=correct,
         failure_escalation=failure_escalation,
+        approval_requested=bool(approvals),
+        wrong_approval_request=bool(approvals) and not correct,
         decision_acceptable=correct or (case.escalation_acceptable and action_type == escalation),
         resolved=bool(outcome and outcome.outcome_status == "success"),
         forbidden_executed=sorted(set(executed) & case.forbidden_actions),

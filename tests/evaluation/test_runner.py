@@ -269,3 +269,30 @@ def test_a_chosen_escalation_is_scored_as_a_decision(config_copy) -> None:
     )
     (case,) = report.cases
     assert (case.failure_escalation, case.decision_correct) == (False, True)
+
+
+def test_wrong_proposals_sent_for_approval_are_counted(config_copy) -> None:
+    script = {
+        "single_agent": [
+            {
+                "action": "decide",
+                "rationale": "Grant it.",
+                "decision": {
+                    "decision": "propose_action",
+                    "rationale": "Approver will check.",
+                    "candidate_actions": ["grant_policy_exception", "escalate_case"],
+                    "proposal": {"action_type": "grant_policy_exception", "evidence_refs": []},
+                },
+            }
+        ]
+    }
+    report = _run(
+        config_copy,
+        SINGLE_S3,
+        environ={"CASEFORGE__ENGINE__MODE": "single_agent"},
+        factory=lambda case: FakeReasoner(script),
+    )
+    (case,) = report.cases
+    assert case.blocker == "exception_unjustified"
+    assert (case.approval_requested, case.wrong_approval_request) == (True, True)
+    assert (report.summary.approval_requests, report.summary.wrong_approval_requests) == (1, 1)
