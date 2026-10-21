@@ -133,3 +133,7 @@ tests/           unit, contract, architecture, restart (real process kills), API
 eval_results/    evaluation reports, comparisons, and recorded model responses
 docs/            architecture, governance, evaluation, pre-registration
 ```
+
+---
+
+Copyright © 2026 José Carlos Bozelli Jr. All rights reserved.
